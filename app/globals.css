@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+/*
+  Design System Theme Variables
+  Adjust these to match your desired color palette.
+*/
+:root {
+  /* Light theme */
+  --primary: 220 90% 56%; /* blue */
+  --primary-foreground: 0 0% 100%;
+  --background: 0 0% 100%;
+  --foreground: 220 15% 20%;
+  --card: 0 0% 100%;
+  --card-foreground: 220 15% 20%;
+}
+
+.dark {
+  /* Dark theme */
+  --primary: 220 90% 40%;
+  --primary-foreground: 0 0% 100%;
+  --background: 220 15% 10%;
+  --foreground: 0 0% 90%;
+  --card: 220 15% 15%;
+  --card-foreground: 0 0% 90%;
+}
+

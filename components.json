@@ -1,0 +1,12 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "components": [
+    "button",
+    "card",
+    "dialog",
+    "input",
+    "tabs",
+    "textarea",
+    "scrollarea"
+  ]
+}
