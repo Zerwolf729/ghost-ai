@@ -10,13 +10,24 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Example dark theme colors – adjust as needed to match design
-        primary: 'hsl(var(--primary))',
-        'primary-foreground': 'hsl(var(--primary-foreground))',
-        background: 'hsl(var(--background))',
-        foreground: 'hsl(var(--foreground))',
-        card: 'hsl(var(--card))',
-        'card-foreground': 'hsl(var(--card-foreground))',
+        // Map Tailwind color names to CSS custom properties defined in globals.css
+        base: 'var(--bg-base)',
+        surface: 'var(--bg-surface)',
+        elevated: 'var(--bg-elevated)',
+        subtle: 'var(--bg-subtle)',
+        "border-default": 'var(--border-default)',
+        "border-subtle": 'var(--border-subtle)',
+        primary: 'var(--text-primary)',
+        secondary: 'var(--text-secondary)',
+        muted: 'var(--text-muted)',
+        faint: 'var(--text-faint)',
+        "accent-primary": 'var(--accent-primary)',
+        "accent-primary-dim": 'var(--accent-primary-dim)',
+        "accent-ai": 'var(--accent-ai)',
+        "accent-ai-text": 'var(--accent-ai-text)',
+        error: 'var(--state-error)',
+        success: 'var(--state-success)',
+        warning: 'var(--state-warning)',
       },
     },
   },

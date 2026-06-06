@@ -21,3 +21,43 @@ export const Tabs = React.forwardRef<HTMLDivElement, TabsProps>(
 );
 
 Tabs.displayName = "Tabs";
+
+/**
+ * TabsList – container for tab triggers.
+ */
+export const TabsList = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div
+      ref={ref}
+      role="tablist"
+      className={cn("inline-flex border-b border-default", className)}
+      {...props}
+    />
+  ),
+);
+TabsList.displayName = "TabsList";
+
+/**
+ * TabsTrigger – individual tab button.
+ */
+export interface TabsTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  value: string;
+}
+export const TabsTrigger = React.forwardRef<HTMLButtonElement, TabsTriggerProps>(
+  ({ className, value, ...props }, ref) => (
+    <button
+      ref={ref}
+      data-value={value}
+      role="tab"
+      className={cn(
+        "px-3 py-2 text-sm font-medium",
+        "text-primary",
+        "border-b-2 border-transparent",
+        "hover:text-primary hover:border-primary",
+        className,
+      )}
+      {...props}
+    />
+  ),
+);
+TabsTrigger.displayName = "TabsTrigger";
