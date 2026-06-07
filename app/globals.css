@@ -1,26 +1,55 @@
 @import "tailwindcss";
 
 /*
-  Design System Theme Variables
-  Adjust these to match your desired color palette.
+  Dark‑only theme variables – based on UI context specification.
+  Components should use the Tailwind utility names (bg‑base, text‑primary, etc.)
+  which are mapped to these custom properties via the Tailwind config.
 */
 :root {
-  /* Light theme */
-  --primary: 220 90% 56%; /* blue */
-  --primary-foreground: 0 0% 100%;
-  --background: 0 0% 100%;
-  --foreground: 220 15% 20%;
-  --card: 0 0% 100%;
-  --card-foreground: 220 15% 20%;
+  /* Page background */
+  --bg-base: #080809;        /* --bg-base */
+  /* Surfaces */
+  --bg-surface: #111114;      /* --bg-surface */
+  --bg-elevated: #18181c;    /* --bg-elevated */
+  --bg-subtle: #1e1e23;      /* --bg-subtle */
+  /* Borders */
+  --border-default: #2a2a30;  /* --border-default */
+  --border-subtle: #3a3a42;   /* --border-subtle */
+  /* Text */
+  --text-primary: #f0f0f4;   /* --text-primary */
+  --text-secondary: #c0c0cc; /* --text-secondary */
+  --text-muted: #808090;     /* --text-muted */
+  --text-faint: #505060;     /* --text-faint */
+  /* Accents */
+  --accent-primary: #00c8d4;          /* cyan */
+  --accent-primary-dim: rgba(0,200,212,0.12);
+  --accent-ai: #6457f9;               /* indigo‑purple */
+  --accent-ai-text: #8b82ff;
+  /* States */
+  --state-error: #ff4d4f;
+  --state-success: #34d399;
+  --state-warning: #fbbf24;
 }
 
-.dark {
-  /* Dark theme */
-  --primary: 220 90% 40%;
-  --primary-foreground: 0 0% 100%;
-  --background: 220 15% 10%;
-  --foreground: 0 0% 90%;
-  --card: 220 15% 15%;
-  --card-foreground: 0 0% 90%;
+/* No light theme – the app runs in dark mode only. */
+
+@layer utilities {
+  .bg-base { background-color: var(--bg-base); }
+  .bg-surface { background-color: var(--bg-surface); }
+  .bg-elevated { background-color: var(--bg-elevated); }
+  .bg-subtle { background-color: var(--bg-subtle); }
+  .border-default { border-color: var(--border-default); }
+  .border-subtle { border-color: var(--border-subtle); }
+  .text-primary { color: var(--text-primary); }
+  .text-secondary { color: var(--text-secondary); }
+  .text-muted { color: var(--text-muted); }
+  .text-faint { color: var(--text-faint); }
+  .accent-primary { color: var(--accent-primary); }
+  .accent-primary-dim { color: var(--accent-primary-dim); }
+  .accent-ai { color: var(--accent-ai); }
+  .accent-ai-text { color: var(--accent-ai-text); }
+  .state-error { color: var(--state-error); }
+  .state-success { color: var(--state-success); }
+  .state-warning { color: var(--state-warning); }
 }
 
