@@ -8,19 +8,17 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Goal
 
-- Implement design system (shadcn UI, lucide-react, utils) (completed)
-- Implement editor components (navbar, sidebar, dialog pattern) (completed)
-- Applied dark theme to app/page.tsx (completed)
+- None (all items completed).
 
 ## Completed
 
-- None yet.
+- Implement design system (shadcn UI, lucide-react, utils)
+- Implement editor components (navbar, sidebar, dialog pattern)
+- Applied dark theme to app/page.tsx
 
 ## In Progress
 
-- Implement design system (shadcn UI, lucide-react, utils) (completed)
-- Implement editor components (navbar, sidebar, dialog pattern) (completed)
-- Applied dark theme to app/page.tsx (completed)
+- None.
 
 ## Next Up
 

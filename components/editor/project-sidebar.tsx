@@ -28,8 +28,13 @@ export const ProjectSidebar: React.FC<ProjectSidebarProps> = ({ isOpen, onClose 
       className={cn(
         "fixed inset-y-0 left-0 z-30 w-64 transform bg-surface shadow-lg transition-transform duration-300 ease-in-out",
         isOpen ? "translate-x-0" : "-translate-x-full",
+        !isOpen && "pointer-events-none",
         "border-r border-default",
       )}
+      aria-hidden={!isOpen}
+      hidden={!isOpen}
+      inert={!isOpen}
+      tabIndex={isOpen ? undefined : -1}
     >
       {/* Header */}
       <header className="flex items-center justify-between border-b border-default px-4 py-3">

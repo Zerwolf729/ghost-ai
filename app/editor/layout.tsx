@@ -19,6 +19,8 @@ export default function EditorLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
+  // Deterministic close handler for the sidebar
+  const closeSidebar = () => setSidebarOpen(false);
 
   return (
     <>
@@ -26,7 +28,7 @@ export default function EditorLayout({
       <EditorNavbar sidebarOpen={sidebarOpen} onToggleSidebar={toggleSidebar} />
 
       {/* Floating project sidebar */}
-      <ProjectSidebar isOpen={sidebarOpen} onClose={toggleSidebar} />
+      <ProjectSidebar isOpen={sidebarOpen} onClose={closeSidebar} />
 
       {/* Main content area */}
       <main className="flex-1 pt-14 min-h-screen bg-base">
