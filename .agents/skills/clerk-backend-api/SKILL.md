@@ -16,7 +16,11 @@ Before ANY POST / PATCH / PUT / DELETE, you MUST do ALL of the following in your
 
 1. **Check CLERK_SECRET_KEY** — verify it is set:
    ```bash
-   echo $CLERK_SECRET_KEY | head -c 10
+   if [ -z "${CLERK_SECRET_KEY:-}" ]; then
+     echo "CLERK_SECRET_KEY is not set"
+   else
+     echo "CLERK_SECRET_KEY is set"
+   fi
    ```
    If empty, stop and ask the user. Do not proceed without a valid key.
 

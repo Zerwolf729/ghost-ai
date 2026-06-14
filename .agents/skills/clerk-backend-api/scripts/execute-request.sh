@@ -17,9 +17,15 @@ _dir="$PWD"
 while true; do
   for _envfile in "$_dir/.env" "$_dir/.env.local"; do
     if [[ -f "$_envfile" ]]; then
-      set -a
-      source "$_envfile"
-      set +a
+      while IFS='=' read -r key value; do
+  [[ -z "${key// }" || "$key" =~ ^[[:space:]]*# ]] && continue
+
+  case "$key" in
+    CLERK_SECRET_KEY|CLERK_BAPI_SCOPES|CLERK_BACKEND_API_URL|CLERK_REST_API_URL)
+      export "$key=${value%$'\r'}"
+      ;;
+  esac
+done < "$_envfile"
     fi
   done
   [[ -n "${CLERK_SECRET_KEY:-}" ]] && break
@@ -42,6 +48,9 @@ BODY="${3:-}"
 
 METHOD_UPPER=$(echo "$METHOD" | tr '[:lower:]' '[:upper:]')
 SCOPES="${CLERK_BAPI_SCOPES:-}"
+has_scope() {
+  [[ ",${SCOPES// /}," == *",$1,"* ]]
+}
 
 # Scope check
 if [[ "$ADMIN" == false ]]; then
@@ -49,14 +58,14 @@ if [[ "$ADMIN" == false ]]; then
     GET)
       ;; # always allowed
     POST|PUT|PATCH)
-      if [[ "$SCOPES" != *"write"* ]]; then
+      if ! has_scope "write"; then
         echo "ERROR: $METHOD_UPPER requests require CLERK_BAPI_SCOPES=\"write\" or --admin flag." >&2
         echo "Current CLERK_BAPI_SCOPES: \"$SCOPES\"" >&2
         exit 1
       fi
       ;;
     DELETE)
-      if [[ "$SCOPES" != *"write"* ]] || [[ "$SCOPES" != *"delete"* ]]; then
+      if ! has_scope "write" || ! has_scope "delete"; then
         echo "ERROR: DELETE requests require CLERK_BAPI_SCOPES=\"write,delete\" or --admin flag." >&2
         echo "Current CLERK_BAPI_SCOPES: \"$SCOPES\"" >&2
         exit 1
@@ -70,11 +79,14 @@ if [[ "$ADMIN" == false ]]; then
 fi
 
 # Base URL: use CLERK_REST_API_URL if set, otherwise default to production
-BASE_URL="${CLERK_REST_API_URL:-https://api.clerk.com}"
+BASE_URL="${CLERK_BACKEND_API_URL:-${CLERK_REST_API_URL:-https://api.clerk.com}}"
 
 # Build curl command
 CURL_ARGS=(
-  -s
+  -fsS
+  --connect-timeout 10
+  --retry 2
+  --retry-all-errors
   -X "$METHOD_UPPER"
   "${BASE_URL}/v1${PATH_ARG}"
   -H "Authorization: Bearer ${CLERK_SECRET_KEY:?CLERK_SECRET_KEY is not set}"

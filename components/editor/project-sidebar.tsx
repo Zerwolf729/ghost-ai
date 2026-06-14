@@ -33,8 +33,7 @@ export function ProjectSidebar({
   onDelete,
   activeProjectId,
 }: ProjectSidebarProps) {
-  console.log('ProjectSidebar render:', isOpen);
-  const initialTab = sharedProjects.some((project) => project.id === activeProjectId)
+    const initialTab = sharedProjects.some((project) => project.id === activeProjectId)
     ? "shared"
     : "my-projects";
   const [activeTab, setActiveTab] = useState<"my-projects" | "shared">(initialTab);

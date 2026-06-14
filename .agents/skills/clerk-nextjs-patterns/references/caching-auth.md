@@ -6,19 +6,25 @@
 
 ```typescript
 import { auth } from '@clerk/nextjs/server';
-import { unstable_cache } from 'next/cache';
+import { cacheTag } from 'next/cache';
+
+async function getCachedUserData(userId: string) {
+  'use cache';
+
+  cacheTag(`user-${userId}`);
+
+  return getUserData(userId);
+}
 
 export default async function ProfilePage() {
   const { userId } = await auth();
-  if (!userId) return <div>Not signed in</div>;
 
-  const cachedGetUserData = unstable_cache(
-    () => getUserData(userId),
-    [`user-${userId}`],
-    { revalidate: 60, tags: [`user-${userId}`] }
-  );
+  if (!userId) {
+    return <div>Not signed in</div>;
+  }
 
-  const userData = await cachedGetUserData();
+  const userData = await getCachedUserData(userId);
+
   return <div>{userData.name}</div>;
 }
 ```
@@ -27,17 +33,24 @@ export default async function ProfilePage() {
 
 ```typescript
 'use server';
-import { revalidateTag } from 'next/cache';
+
 import { auth } from '@clerk/nextjs/server';
+import { revalidateTag } from 'next/cache';
 
 export async function updateProfile(formData: FormData) {
   const { userId } = await auth();
-  if (!userId) throw new Error('Unauthorized');
+
+  if (!userId) {
+    throw new Error('Unauthorized');
+  }
 
   await db.users.update({
     where: { id: userId },
-    data: { name: formData.get('name') as string },
+    data: {
+      name: formData.get('name') as string,
+    },
   });
+
   revalidateTag(`user-${userId}`);
 }
 ```
@@ -45,12 +58,37 @@ export async function updateProfile(formData: FormData) {
 ## Org-Scoped Cache
 
 ```typescript
-const { orgId } = await auth();
-const getOrgData = unstable_cache(
-  () => db.orgData.findMany({ where: { organizationId: orgId } }),
-  [`org-${orgId}-data`],
-  { revalidate: 300, tags: [`org-${orgId}`] }
-);
+import { auth } from '@clerk/nextjs/server';
+import { cacheTag } from 'next/cache';
+
+async function getCachedOrgData(orgId: string) {
+  'use cache';
+
+  cacheTag(`org-${orgId}`);
+
+  return db.orgData.findMany({
+    where: {
+      organizationId: orgId,
+    },
+  });
+}
+
+export default async function OrgPage() {
+  const { orgId } = await auth();
+
+  if (!orgId) {
+    return <div>No organization selected</div>;
+  }
+
+  const orgData = await getCachedOrgData(orgId);
+
+  return <div>{JSON.stringify(orgData)}</div>;
+}
 ```
 
-[Docs](https://nextjs.org/docs/app/building-your-application/caching)
+## Notes
+
+- Always include `userId` or `orgId` in cache tags.
+- Never cache authentication state itself.
+- Use `revalidateTag()` after mutations.
+- Avoid sharing cached data across users or organizations.

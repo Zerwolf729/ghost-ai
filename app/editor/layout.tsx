@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
  * - Shifts main content right when the desktop sidebar is open.
  */
 export default function EditorLayout({
+
   // added debug
 
   children,
