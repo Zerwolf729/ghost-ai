@@ -11,10 +11,10 @@ const config: Config = {
     extend: {
       colors: {
         // Map Tailwind color names to CSS custom properties defined in globals.css
-        base: 'var(--bg-base)',
-        surface: 'var(--bg-surface)',
-        elevated: 'var(--bg-elevated)',
-        subtle: 'var(--bg-subtle)',
+        base: 'var(--color-bg-base)',
+        surface: 'var(--color-bg-surface)',
+        elevated: 'var(--color-bg-elevated)',
+        subtle: 'var(--color-bg-subtle)',
         "border-default": 'var(--border-default)',
         "border-subtle": 'var(--border-subtle)',
         primary: 'var(--text-primary)',
