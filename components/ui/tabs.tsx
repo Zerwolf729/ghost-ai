@@ -61,3 +61,16 @@ export const TabsTrigger = React.forwardRef<HTMLButtonElement, TabsTriggerProps>
   ),
 );
 TabsTrigger.displayName = "TabsTrigger";
+
+// TabsContent – container for a tab's panel content
+export const TabsContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div
+      ref={ref}
+      role="tabpanel"
+      className={cn("p-4", className)}
+      {...props}
+    />
+  ),
+);
+TabsContent.displayName = "TabsContent";

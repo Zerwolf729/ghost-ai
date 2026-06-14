@@ -95,8 +95,8 @@ shadcn/ui on top of Tailwind. No custom design system. Components live in `compo
 
 ## Layout Patterns
 
-- Editor workspace: full-viewport layout — floating sidebar overlay on the left, center canvas, slide-over AI sidebar on the right.
-- Sidebars: floating overlay with dark semi-transparent background and subtle border.
+- Editor workspace: full-viewport layout — fixed navbar, integrated left project sidebar below it, center canvas, and slide-over AI sidebar on the right.
+- Sidebars: permanent editor panels with solid dark surface backgrounds and subtle border separation; mobile sidebars may use overlay behavior.
 - Modals and dialogs: centered overlay, `rounded-3xl`, dark background with backdrop blur.
 - Navbar: top bar with dark background and bottom border.
 

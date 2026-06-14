@@ -1,11 +1,12 @@
-import React from "react";
+import { redirect } from "next/navigation";
+import { auth } from "@clerk/nextjs/server";
 
-export default function Page() {
-  return (
-    <main className="flex min-h-screen items-center justify-center bg-base text-primary">
-      <div className="text-2xl font-semibold text-primary">
-        ghost Al
-      </div>
-    </main>
-    );
+export default async function HomePage() {
+  const { userId } = await auth();
+  if (userId) {
+    redirect("/editor");
+  } else {
+    redirect("/sign-in");
+  }
+  return null; // unreachable
 }
