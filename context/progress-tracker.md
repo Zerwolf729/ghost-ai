@@ -47,6 +47,16 @@ Update this file whenever the current phase, active feature, or implementation s
   - ✅ Removed unused setSharedProjects setter from project-dialogs-provider.tsx
   - ✅ Build passes with no TypeScript errors
   - ✅ Lint passes with no errors or warnings
+- **Implemented CodeRabbit suggestions (2026-06-21):**
+  - ✅ Fixed Escape key listener in dialog.tsx: Added open state guard and dependency to prevent handling events when dialog is closed
+  - ✅ Fixed memory leaks in use-project-dialogs.ts: Added timeout cleanup to prevent stale callbacks
+    - Added ref to track pending timeout IDs
+    - Created cleanup function to clear pending timeouts
+    - Updated closeDialog to call cleanup before resetting state
+    - Added useEffect cleanup for component unmount
+    - Updated all three handlers (create, rename, delete) to clear old timeouts before starting new ones
+  - ✅ Build passes with no TypeScript errors
+  - ✅ Lint passes with no errors or warnings
 
 ## In Progress
 

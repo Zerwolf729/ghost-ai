@@ -107,9 +107,11 @@ interface DialogContentProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
   ({ className, children, showClose = true, ...props }, ref) => {
-    const { onOpenChange } = useDialogContext();
+    const { open, onOpenChange } = useDialogContext();
 
     React.useEffect(() => {
+      if (!open) return;
+
       const handleEscape = (e: KeyboardEvent) => {
         if (e.key === "Escape") {
           onOpenChange(false);
@@ -118,7 +120,7 @@ export const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps
 
       document.addEventListener("keydown", handleEscape);
       return () => document.removeEventListener("keydown", handleEscape);
-    }, [onOpenChange]);
+    }, [open, onOpenChange]);
 
     return (
       <DialogPortal>

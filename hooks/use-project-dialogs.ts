@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 
 interface ProjectRow {
   id: string;
@@ -63,6 +63,17 @@ export function useProjectDialogs(options?: UseProjectDialogsOptions): UseProjec
   const [isLoading, setIsLoading] = useState(false);
   const [selectedProject, setSelectedProject] = useState<ProjectRow | null>(null);
 
+  // Ref to track pending timeout for cleanup
+  const pendingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Clear any pending timeout
+  const clearPendingTimeout = useCallback(() => {
+    if (pendingTimeoutRef.current) {
+      clearTimeout(pendingTimeoutRef.current);
+      pendingTimeoutRef.current = null;
+    }
+  }, []);
+
   // Generate slug from project name
   const slug = useMemo(() => {
     return projectName
@@ -94,11 +105,17 @@ export function useProjectDialogs(options?: UseProjectDialogsOptions): UseProjec
 
   // Close any open dialog
   const closeDialog = useCallback(() => {
+    clearPendingTimeout();
     setActiveDialog("none");
     setProjectName("");
     setSelectedProject(null);
     setIsLoading(false);
-  }, []);
+  }, [clearPendingTimeout]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => clearPendingTimeout();
+  }, [clearPendingTimeout]);
 
   // Handle create project (mock implementation with callback)
   const handleCreateProject = useCallback(() => {
@@ -107,12 +124,14 @@ export function useProjectDialogs(options?: UseProjectDialogsOptions): UseProjec
     setIsLoading(true);
 
     // Mock API call
-    setTimeout(() => {
+    clearPendingTimeout();
+    pendingTimeoutRef.current = setTimeout(() => {
       options?.onCreateSuccess?.({ name: projectName, slug });
       setIsLoading(false);
       closeDialog();
+      pendingTimeoutRef.current = null;
     }, 1000);
-  }, [projectName, slug, closeDialog, options]);
+  }, [projectName, slug, closeDialog, options, clearPendingTimeout]);
 
   // Handle rename project (mock implementation with callback)
   const handleRenameProject = useCallback(() => {
@@ -121,12 +140,14 @@ export function useProjectDialogs(options?: UseProjectDialogsOptions): UseProjec
     setIsLoading(true);
 
     // Mock API call
-    setTimeout(() => {
+    clearPendingTimeout();
+    pendingTimeoutRef.current = setTimeout(() => {
       options?.onRenameSuccess?.(selectedProject.id, projectName);
       setIsLoading(false);
       closeDialog();
+      pendingTimeoutRef.current = null;
     }, 1000);
-  }, [projectName, selectedProject, closeDialog, options]);
+  }, [projectName, selectedProject, closeDialog, options, clearPendingTimeout]);
 
   // Handle delete project (mock implementation with callback)
   const handleDeleteProject = useCallback(() => {
@@ -135,12 +156,14 @@ export function useProjectDialogs(options?: UseProjectDialogsOptions): UseProjec
     setIsLoading(true);
 
     // Mock API call
-    setTimeout(() => {
+    clearPendingTimeout();
+    pendingTimeoutRef.current = setTimeout(() => {
       options?.onDeleteSuccess?.(selectedProject.id);
       setIsLoading(false);
       closeDialog();
+      pendingTimeoutRef.current = null;
     }, 1000);
-  }, [selectedProject, closeDialog, options]);
+  }, [selectedProject, closeDialog, options, clearPendingTimeout]);
 
   return {
     // Dialog state
