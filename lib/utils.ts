@@ -23,6 +23,7 @@ type ClassValue =
   | undefined
   | false
   | ClassArray
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   | { [key: string]: any };
 
 type ClassArray = ClassValue[];

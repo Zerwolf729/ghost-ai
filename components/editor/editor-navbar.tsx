@@ -1,5 +1,5 @@
 import React from "react";
-import { PanelLeftOpen, PanelLeftClose } from "lucide-react";
+import { PanelLeftOpen } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 
 interface EditorNavbarProps {

@@ -8,6 +8,14 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
    */
   Icon?: LucideIcon;
   /**
+   * Button variant
+   */
+  variant?: "default" | "outline" | "destructive";
+  /**
+   * Button size
+   */
+  size?: "default" | "lg";
+  /**
    * Text label for the button
    */
   children: React.ReactNode;
@@ -15,17 +23,24 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 
 /**
  * A styled button component that respects the project's dark theme.
- * It uses the `cn` helper to merge Tailwind classes.
+ * Supports variants (default, outline, destructive) and sizes (default, lg).
  */
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, Icon, children, ...props }, ref) => {
+  ({ className, Icon, variant = "default", size = "default", children, ...props }, ref) => {
     return (
       <button
         ref={ref}
         className={cn(
-          "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors",
-          "bg-primary text-primary-foreground hover:bg-primary/90",
-          "dark:bg-primary-dark dark:text-primary-foreground-dark dark:hover:bg-primary-dark/90",
+          "inline-flex items-center justify-center rounded-xl text-sm font-medium transition-colors",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary",
+          "disabled:pointer-events-none disabled:opacity-50",
+          // Variants
+          variant === "default" && "bg-accent-primary text-text-primary hover:bg-accent-primary/90",
+          variant === "outline" && "border border-border-default bg-transparent hover:bg-bg-subtle text-text-primary",
+          variant === "destructive" && "bg-state-error text-text-primary hover:bg-state-error/90",
+          // Sizes
+          size === "default" && "h-9 px-4 py-2",
+          size === "lg" && "h-11 px-6 py-3",
           className,
         )}
         {...props}
