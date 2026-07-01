@@ -120,6 +120,7 @@ export function useProjectDialogs(options?: UseProjectDialogsOptions): UseProjec
   // Handle create project (mock implementation with callback)
   const handleCreateProject = useCallback(() => {
     if (!projectName.trim()) return;
+    if (!slug) return;
 
     setIsLoading(true);
 
