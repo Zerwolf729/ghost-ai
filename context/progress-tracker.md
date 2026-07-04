@@ -57,6 +57,13 @@ Update this file whenever the current phase, active feature, or implementation s
     - Updated all three handlers (create, rename, delete) to clear old timeouts before starting new ones
   - ✅ Build passes with no TypeScript errors
   - ✅ Lint passes with no errors or warnings
+- **Implemented Prisma feature (2026-07-04):**
+  - ✅ Created `prisma/models/project.prisma` with `Project` and `ProjectCollaborator` models
+  - ✅ Added `Project` fields: ownerId, name, description?, status enum (DRAFT/ARCHIVED), canvasJsonPath?, timestamps, indexes on ownerId and createdAt
+  - ✅ Added `ProjectCollaborator` fields: project relation with cascade delete, email, createdAt, unique constraint on project/email, indexes on email and project/date
+  - ✅ Created `lib/prisma.ts` cached singleton with Accelerate/adapter-pg branch by DATABASE_URL
+  - ✅ Ran migration and generated client successfully
+  - ✅ Build passes with no TypeScript errors
 
 ## In Progress
 
