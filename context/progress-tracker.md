@@ -57,6 +57,31 @@ Update this file whenever the current phase, active feature, or implementation s
     - Updated all three handlers (create, rename, delete) to clear old timeouts before starting new ones
   - ✅ Build passes with no TypeScript errors
   - ✅ Lint passes with no errors or warnings
+- **Implemented Prisma feature (2026-07-04):**
+  - ✅ Created `prisma/models/project.prisma` with `Project` and `ProjectCollaborator` models
+  - ✅ Added `Project` fields: ownerId, name, description?, status enum (DRAFT/ARCHIVED), canvasJsonPath?, timestamps, indexes on ownerId and createdAt
+  - ✅ Added `ProjectCollaborator` fields: project relation with cascade delete, email, createdAt, unique constraint on project/email, indexes on email and project/date
+  - ✅ Created `lib/prisma.ts` cached singleton with Accelerate/adapter-pg branch by DATABASE_URL
+  - ✅ Ran migration and generated client successfully
+  - ✅ Build passes with no TypeScript errors
+- **Implemented Project APIs (2026-07-04):**
+  - ✅ `GET /api/projects` — list current user's projects
+  - ✅ `POST /api/projects` — create project (defaults name to "Untitled Project")
+  - ✅ `PATCH /api/projects/[projectId]` — rename project with owner check
+  - ✅ `DELETE /api/projects/[projectId]` — delete project with owner check
+  - ✅ Unauthenticated requests return 401
+  - ✅ Non-owner mutations return 403
+  - ✅ Build passes with no TypeScript errors
+- **Wired editor home to real data (2026-07-04):**
+  - ✅ Created `lib/projects.ts` server-side helpers (getOwnedProjects, getSharedProjects)
+  - ✅ Created `hooks/use-project-actions.ts` — dialog state + real API mutations (POST/PATCH/DELETE)
+  - ✅ Create navigates to new workspace via router.push
+  - ✅ Rename updates project list on success
+  - ✅ Delete removes from list
+  - ✅ Editor home page fetches data server-side, no client-side initial load
+  - ✅ Provider accepts initial projects as props
+  - ✅ Layout simplified (sidebar/dialogs moved to page)
+  - ✅ Build passes with no TypeScript errors
 
 ## In Progress
 
@@ -64,7 +89,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- None
+- Wire project dialogs UI to API routes
 
 ## Architecture Decisions
 

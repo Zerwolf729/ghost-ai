@@ -1,7 +1,7 @@
 "use client";
 
-import { createContext, useContext, useState } from "react";
-import { useProjectDialogs } from "@/hooks/use-project-dialogs";
+import React, { createContext, useContext, useState } from "react";
+import { useProjectActions } from "@/hooks/use-project-actions";
 
 interface ProjectRow {
   id: string;
@@ -37,9 +37,9 @@ interface ProjectDialogsContextValue {
   setProjectName: (name: string) => void;
 
   // Handlers
-  handleCreateProject: () => void;
-  handleRenameProject: () => void;
-  handleDeleteProject: () => void;
+  handleCreateProject: () => Promise<void>;
+  handleRenameProject: () => Promise<void>;
+  handleDeleteProject: () => Promise<void>;
 }
 
 const ProjectDialogsContext = createContext<ProjectDialogsContextValue | undefined>(undefined);
@@ -58,37 +58,27 @@ export function useProjectDialogsContext() {
 
 interface ProjectDialogsProviderProps {
   children: React.ReactNode;
+  initialOwnedProjects: ProjectRow[];
+  initialSharedProjects: ProjectRow[];
 }
 
-// Initial mock project data
-const INITIAL_OWNED_PROJECTS = [
-  { id: "1", name: "E-commerce Platform" },
-  { id: "2", name: "Mobile Banking App" },
-  { id: "3", name: "Social Media Dashboard" },
-];
-
-const INITIAL_SHARED_PROJECTS = [
-  { id: "4", name: "Analytics Service" },
-  { id: "5", name: "Payment Gateway" },
-];
-
 /**
- * Provider for project dialogs state and project data.
- * Manages both dialog state and mock project data, providing full functionality
- * for create, rename, and delete operations that update the project list.
+ * Provider for project dialogs state and real project data.
+ *
+ * Receives initial owned/shared projects (fetched server-side) and wires
+ * dialog state to real API mutations via useProjectActions.
  */
-export function ProjectDialogsProvider({ children }: ProjectDialogsProviderProps) {
-  // Project state management
-  const [ownedProjects, setOwnedProjects] = useState(INITIAL_OWNED_PROJECTS);
-  const [sharedProjects] = useState(INITIAL_SHARED_PROJECTS);
+export function ProjectDialogsProvider({
+  children,
+  initialOwnedProjects,
+  initialSharedProjects,
+}: ProjectDialogsProviderProps) {
+  const [ownedProjects, setOwnedProjects] = useState<ProjectRow[]>(initialOwnedProjects);
+  const [sharedProjects] = useState<ProjectRow[]>(initialSharedProjects);
 
   // Callback for when a project is created
   const handleCreateSuccess = (project: { name: string; slug: string }) => {
-    const newProject = {
-      id: String(Date.now()), // Generate unique ID
-      name: project.name,
-    };
-    setOwnedProjects((prev) => [...prev, newProject]);
+    // Navigation handled by hook; optimistic state not needed since we navigate away
   };
 
   // Callback for when a project is renamed
@@ -103,8 +93,8 @@ export function ProjectDialogsProvider({ children }: ProjectDialogsProviderProps
     setOwnedProjects((prev) => prev.filter((p) => p.id !== projectId));
   };
 
-  // Use the dialog hook with callbacks
-  const dialogState = useProjectDialogs({
+  // Use the actions hook with callbacks
+  const dialogState = useProjectActions({
     onCreateSuccess: handleCreateSuccess,
     onRenameSuccess: handleRenameSuccess,
     onDeleteSuccess: handleDeleteSuccess,

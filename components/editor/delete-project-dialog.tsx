@@ -16,7 +16,7 @@ interface DeleteProjectDialogProps {
   onOpenChange: (open: boolean) => void;
   projectName: string;
   isLoading: boolean;
-  onDelete: () => void;
+  onDelete: () => Promise<void>;
 }
 
 /**

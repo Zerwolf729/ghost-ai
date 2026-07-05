@@ -20,7 +20,7 @@ interface CreateProjectDialogProps {
   slug: string;
   isLoading: boolean;
   onProjectNameChange: (name: string) => void;
-  onCreate: () => void;
+  onCreate: () => Promise<void>;
 }
 
 /**

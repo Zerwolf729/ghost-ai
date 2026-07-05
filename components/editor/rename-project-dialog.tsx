@@ -20,7 +20,7 @@ interface RenameProjectDialogProps {
   projectName: string;
   isLoading: boolean;
   onProjectNameChange: (name: string) => void;
-  onRename: () => void;
+  onRename: () => Promise<void>;
 }
 
 /**
