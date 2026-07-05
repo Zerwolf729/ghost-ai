@@ -107,7 +107,7 @@ Use this skill for:
 ### 3. Framework Readiness
 
 - `framework-cli-first` - Evaluate deploy readiness against `@prisma/cli app deploy`, not against what `create-prisma` can scaffold.
-- `framework-supported-cli-deploy` - Compute deploy supports `nextjs`, `nuxt`, `astro`, `hono`, `nestjs`, `tanstack-start`, `custom`, and `bun`.
+- `framework-supported-cli-deploy` - Compute deploy supports `nextjs`, `nuxt`, `astro`, `hono`, `tanstack-start`, `custom`, and `bun`.
 - `framework-create-prisma-defaults-only` - `create-prisma` can provide generated defaults and `compute:deploy`, but it is not the general deploy surface for existing apps.
 - `framework-build-output` - Compute needs a server entrypoint or framework artifact, not only static output.
 

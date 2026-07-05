@@ -203,13 +203,6 @@ bunx @prisma/cli@latest app build --build-type bun --entry src/index.ts
 bunx @prisma/cli@latest app run --build-type bun --entry src/index.ts --port 8080
 ```
 
-For NestJS, use `app build` to validate the Compute artifact and run the framework's own dev command locally:
-
-```bash
-bunx @prisma/cli@latest app build --build-type nestjs
-bun run dev
-```
-
 With a compute config, pass the target name instead of repeating framework/entry/port flags:
 
 ```bash
@@ -218,8 +211,6 @@ bunx @prisma/cli@latest app run api --port 8080
 ```
 
 `app run --port` sets `PORT` for local development. It does not rewrite an app's explicit host binding, so a local run is not enough to prove the deployed server is reachable from ingress.
-
-`app run --build-type nestjs` is not supported. If a config-backed NestJS target is selected, run the Nest dev server directly instead.
 
 ## Deploy
 

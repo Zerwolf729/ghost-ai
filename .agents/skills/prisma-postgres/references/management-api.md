@@ -37,9 +37,11 @@ Authorization: Bearer $TOKEN
 
 ## OAuth flow summary
 
-1. Redirect user to `https://auth.prisma.io/authorize` with `client_id`, `redirect_uri`, `response_type=code`, and scopes.
+This flow is for confidential clients only.
+
+1. Redirect user to `https://auth.prisma.io/authorize` with `client_id`, `redirect_uri`, `response_type=code`, `code_challenge`, `code_challenge_method=S256`, and scopes.
 2. Receive `code` on callback.
-3. Exchange code at `https://auth.prisma.io/token`.
+3. Exchange code at `https://auth.prisma.io/token` with `code_verifier`.
 4. Use returned access token in Management API requests.
 
 ## Common endpoints

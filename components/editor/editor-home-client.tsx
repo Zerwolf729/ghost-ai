@@ -8,11 +8,7 @@ import { DeleteProjectDialog } from "./delete-project-dialog";
 import { ProjectDialogsProvider, useProjectDialogsContext } from "./project-dialogs-provider";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "./sidebar-context";
-
-interface ProjectRow {
-  id: string;
-  name: string;
-}
+import type { ProjectRow } from "@/lib/projects";
 
 interface EditorHomeClientProps {
   initialOwnedProjects: ProjectRow[];

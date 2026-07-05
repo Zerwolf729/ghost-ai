@@ -1,4 +1,4 @@
-import { auth } from '@clerk/nextjs/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { prisma } from './prisma';
 
 export interface ProjectRow {
@@ -26,11 +26,11 @@ export async function getOwnedProjects(): Promise<ProjectRow[]> {
 
 export async function getSharedProjects(): Promise<ProjectRow[]> {
   try {
-    const { userId } = await auth();
-    if (!userId) return [];
+    const user = await currentUser();
+    if (!user?.emailAddresses?.[0]?.emailAddress) return [];
 
     const collaborators = await prisma.projectCollaborator.findMany({
-      where: { email: { contains: userId } },
+      where: { email: user.emailAddresses[0].emailAddress },
       include: { project: { select: { id: true, name: true } } },
       orderBy: { createdAt: 'desc' },
     });

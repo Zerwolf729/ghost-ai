@@ -59,7 +59,7 @@ To apply migrations in production, run:
 
 ## Exit Codes
 
-- `0`: Success (may have pending migrations, but command ran successfully)
-- `1`: Error
+- `0`: Success (database fully synchronized and migration history matches local files)
+- `1`: Error (including pending, diverged, missing, or failed migrations)
 
 To check for pending migrations programmatically, you might need to parse the output or use `migrate diff` with exit code flags.
