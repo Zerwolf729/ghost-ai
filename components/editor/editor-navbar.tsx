@@ -1,6 +1,7 @@
 import React from "react";
-import { PanelLeftOpen } from "lucide-react";
+import { PanelLeftOpen, PanelLeftClose, Share2, MessageSquare } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
+import { Button } from "@/components/ui/button";
 
 interface EditorNavbarProps {
   /**
@@ -11,6 +12,18 @@ interface EditorNavbarProps {
    * Callback to toggle the sidebar open state.
    */
   onToggleSidebar: () => void;
+  /**
+   * Project name to display in the center.
+   */
+  projectName?: string;
+  /**
+   * Callback when share button is clicked.
+   */
+  onOpenShare?: () => void;
+  /**
+   * Whether current user is the project owner.
+   */
+  isOwner?: boolean;
 }
 
 /**
@@ -18,8 +31,8 @@ interface EditorNavbarProps {
  *
  * - Left section: a button that toggles the project sidebar (shows `PanelLeftOpen`
  *   when the sidebar is closed and `PanelLeftClose` when it is open).
- * - Center section: placeholder for a title or breadcrumbs.
- * - Right section: Clerk `UserButton` for profile settings and logout.
+ * - Center section: project name or placeholder.
+ * - Right section: share button, AI sidebar toggle, and Clerk `UserButton`.
  *
  * The bar uses the dark‑only theme tokens defined in `globals.css` via Tailwind
  * utilities (`bg-base`, `border-b`, `border-default`).
@@ -27,11 +40,23 @@ interface EditorNavbarProps {
 export const EditorNavbar: React.FC<EditorNavbarProps> = ({
   sidebarOpen,
   onToggleSidebar,
+  projectName,
+  onOpenShare,
+  isOwner,
 }) => {
   return (
     <header className="fixed top-0 right-0 left-0 flex h-14 items-center justify-between border-b border-default bg-base px-4 z-40">
       {/* Left – sidebar toggle */}
-      {!sidebarOpen && (
+      {sidebarOpen ? (
+        <button
+          type="button"
+          onClick={onToggleSidebar}
+          className="flex h-10 w-10 items-center justify-center rounded-md hover:bg-elevated"
+          aria-label="Close sidebar"
+        >
+          <PanelLeftClose className="h-5 w-5 text-primary" />
+        </button>
+      ) : (
         <button
           type="button"
           onClick={onToggleSidebar}
@@ -42,13 +67,44 @@ export const EditorNavbar: React.FC<EditorNavbarProps> = ({
         </button>
       )}
 
-      {/* Center – title placeholder */}
-      <div className="flex-1 text-center text-primary">
-        {/* Add a real title here when needed */}
+      {/* Center – project name */}
+      <div className="flex-1 text-center">
+        {projectName ? (
+          <span className="text-sm font-medium text-text-primary truncate max-w-xs inline-block">
+            {projectName}
+          </span>
+        ) : (
+          <span className="text-text-muted text-sm">Workspace</span>
+        )}
       </div>
 
-      {/* Right – user menu */}
-      <div className="flex items-center">
+      {/* Right – actions and user menu */}
+      <div className="flex items-center gap-2">
+        {/* Share button */}
+        {onOpenShare && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={onOpenShare}
+            className="h-10 w-10 hover:bg-elevated"
+            aria-label="Share project"
+          >
+            <Share2 className="h-5 w-5 text-text-secondary" />
+          </Button>
+        )}
+
+        {/* AI sidebar toggle */}
+        <button
+          type="button"
+          className="flex h-10 w-10 items-center justify-center rounded-md hover:bg-elevated"
+          aria-label="Toggle AI sidebar"
+          disabled
+        >
+          <MessageSquare className="h-5 w-5 text-text-secondary" />
+        </button>
+
+        {/* User menu */}
         <UserButton />
       </div>
     </header>

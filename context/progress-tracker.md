@@ -82,6 +82,51 @@ Update this file whenever the current phase, active feature, or implementation s
   - ✅ Provider accepts initial projects as props
   - ✅ Layout simplified (sidebar/dialogs moved to page)
   - ✅ Build passes with no TypeScript errors
+- **Implemented Editor Workspace Shell (2026-07-05):**
+  - ✅ Created `components/editor/access-denied.tsx` — centered layout, lock icon, message, link back to /editor
+  - ✅ Created `app/editor/[roomId]/page.tsx` server component with access checks:
+    - Unauthenticated redirects to /sign-in
+    - No project access or missing project shows AccessDenied
+    - Fetches owned + shared projects server-side for sidebar
+  - ✅ Created `components/editor/editor-workspace-client.tsx` — full-viewport workspace layout:
+    - Top navbar with project name
+    - Navbar actions: share button and AI sidebar toggle (disabled, placeholders)
+    - Existing ProjectSidebar on the left with current room highlighted
+    - Central canvas placeholder with dark background and centered message
+    - Right sidebar placeholder for future AI chat (visible on lg+)
+  - ✅ Updated `components/editor/editor-navbar.tsx`:
+    - Added projectName prop display
+    - Added both sidebar toggle icons (open/close)
+    - Added share and AI sidebar action buttons
+  - ✅ `lib/project-access.ts` already existed with getCurrentUserIdentity, checkProjectAccess, getProjectIfAccessible, projectExists helpers
+  - ✅ Build passes with no TypeScript errors
+- **Implemented Share Dialog (2026-07-05):**
+  - ✅ Created `components/editor/project-share-dialog.tsx`:
+    - Owners can invite collaborators by email
+    - Owners can view current collaborators
+    - Owners can remove collaborators
+    - Owners can copy project link with temporary "Copied!" feedback
+    - Collaborators see read-only collaborator list
+    - Inline success/error feedback messages
+  - ✅ Created `app/api/projects/[projectId]/collaborators/route.ts`:
+    - `GET` — list collaborators with Clerk-enriched names and avatars
+    - `POST` — invite collaborator (owner-only, ownership enforced)
+    - `DELETE` — remove collaborator (owner-only, ownership enforced)
+    - Unauthenticated returns 401, non-owner write returns 403
+  - ✅ Created `lib/clerk-users.ts` — helpers for Clerk user lookup (available for future use)
+  - ✅ Created `components/ui/avatar.tsx` — Avatar, AvatarImage, AvatarFallback for user display
+  - ✅ Created `components/ui/label.tsx` — Label component for form fields
+  - ✅ Installed `@radix-ui/react-toast`, `@radix-ui/react-avatar`, `class-variance-authority`
+  - ✅ Updated `components/editor/editor-navbar.tsx`:
+    - Share button now functional, opens share dialog
+    - Added onOpenShare callback and isOwner prop
+  - ✅ Updated `components/editor/editor-workspace-client.tsx`:
+    - Integrated ProjectShareDialog with state management
+    - Passes isOwner from server page through to dialog
+  - ✅ Updated `app/editor/[roomId]/page.tsx`:
+    - Computes isOwner from project.ownerId vs userId
+    - Passes isOwner to workspace client
+  - ✅ Build passes with no TypeScript errors
 
 ## In Progress
 
@@ -89,7 +134,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- Wire project dialogs UI to API routes
+- Implement canvas with React Flow and Liveblocks
 
 ## Architecture Decisions
 
