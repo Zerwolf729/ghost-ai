@@ -38,12 +38,14 @@ export async function checkProjectAccess(projectId: string): Promise<boolean> {
     return true;
   }
 
-  // Check if user is a collaborator
+  // Check if user is a collaborator (normalize email)
   if (primaryEmail) {
+    const normalizedEmail = primaryEmail.toLowerCase().trim();
+
     const collaborator = await prisma.projectCollaborator.findFirst({
       where: {
         projectId,
-        email: primaryEmail,
+        email: normalizedEmail,
       },
     });
 

@@ -1,18 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth, currentUser } from '@clerk/nextjs/server';
+import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
-import { clerkClient } from '@clerk/clerk-sdk-node';
+import { getCurrentUserIdentity } from '@/lib/project-access';
 
 /**
- * Get Clerk user info for an email.
+ * Helper to normalize email to lowercase.
  */
-async function getClerkUserByEmail(email: string) {
-  try {
-    const users = await clerkClient.users.getUserList({ emailAddress: [email] });
-    return users.length > 0 ? users[0] : null;
-  } catch {
-    return null;
-  }
+function normalizeEmail(email: string): string {
+  return email.toLowerCase().trim();
 }
 
 /**
@@ -49,11 +44,17 @@ export async function GET(
       select: { email: true, createdAt: true },
     });
 
-    // If user is not owner and not a collaborator, deny access
+    // If user is not owner, check if they are a collaborator
     if (!isOwner) {
-      const currentUserData = await currentUser();
+      const { primaryEmail: userPrimaryEmail } = await getCurrentUserIdentity();
+
+      if (!userPrimaryEmail) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+
+      const normalizedUserEmail = normalizeEmail(userPrimaryEmail);
       const userHasAccess = collaboratorEmails.some(
-        (c) => c.email === currentUserData?.emailAddresses?.[0]?.emailAddress
+        (c) => normalizeEmail(c.email) === normalizedUserEmail
       );
 
       if (!userHasAccess) {
@@ -62,21 +63,14 @@ export async function GET(
     }
 
     // Enrich collaborator emails with Clerk user data
-    const enrichedCollaborators = await Promise.all(
-      collaboratorEmails.map(async (c) => {
-        const clerkUser = await getClerkUserByEmail(c.email);
-        return {
-          email: c.email,
-          joinedAt: c.createdAt,
-          name: clerkUser
-            ? clerkUser.firstName && clerkUser.lastName
-              ? `${clerkUser.firstName} ${clerkUser.lastName}`
-              : clerkUser.username || c.email
-            : c.email,
-          avatarUrl: clerkUser?.imageUrl || null,
-        };
-      })
-    );
+    // Note: Clerk user lookup requires @clerk/clerk-sdk-node for backend
+    // For now, return emails only - frontend can display name or email
+    const enrichedCollaborators = collaboratorEmails.map((c) => ({
+      email: c.email,
+      joinedAt: c.createdAt,
+      name: c.email, // Will be enriched client-side if Clerk user found
+      avatarUrl: null,
+    }));
 
     return NextResponse.json({
       collaborators: enrichedCollaborators,
@@ -124,20 +118,23 @@ export async function POST(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    // Normalize email
+    const normalizedEmail = normalizeEmail(email);
+
     // Check if already a collaborator
     const existing = await prisma.projectCollaborator.findFirst({
-      where: { projectId, email },
+      where: { projectId, email: normalizedEmail },
     });
 
     if (existing) {
       return NextResponse.json({ error: 'Already a collaborator' }, { status: 409 });
     }
 
-    // Add collaborator
+    // Add collaborator with normalized email
     await prisma.projectCollaborator.create({
       data: {
         projectId,
-        email,
+        email: normalizedEmail,
       },
     });
 
@@ -184,9 +181,12 @@ export async function DELETE(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    // Normalize email for removal
+    const normalizedEmail = normalizeEmail(email);
+
     // Remove collaborator
     await prisma.projectCollaborator.deleteMany({
-      where: { projectId, email },
+      where: { projectId, email: normalizedEmail },
     });
 
     return NextResponse.json({ success: true });
