@@ -10,20 +10,20 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   /**
    * Button variant
    */
-  variant?: "default" | "outline" | "destructive";
+  variant?: "default" | "outline" | "destructive" | "ghost";
   /**
    * Button size
    */
-  size?: "default" | "lg";
+  size?: "default" | "lg" | "sm" | "icon";
   /**
    * Text label for the button
    */
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 /**
  * A styled button component that respects the project's dark theme.
- * Supports variants (default, outline, destructive) and sizes (default, lg).
+ * Supports variants (default, outline, destructive, ghost) and sizes (default, lg, sm, icon).
  */
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, Icon, variant = "default", size = "default", children, ...props }, ref) => {
@@ -38,14 +38,17 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           variant === "default" && "bg-accent-primary text-text-primary hover:bg-accent-primary/90",
           variant === "outline" && "border border-border-default bg-transparent hover:bg-bg-subtle text-text-primary",
           variant === "destructive" && "bg-state-error text-text-primary hover:bg-state-error/90",
+          variant === "ghost" && "bg-transparent hover:bg-bg-elevated text-text-primary",
           // Sizes
           size === "default" && "h-9 px-4 py-2",
           size === "lg" && "h-11 px-6 py-3",
+          size === "sm" && "h-8 px-3 py-1.5 text-xs",
+          size === "icon" && "h-10 w-10",
           className,
         )}
         {...props}
       >
-        {Icon && <Icon className="mr-2 h-4 w-4" aria-hidden="true" />}
+        {Icon && <Icon className={cn("h-4 w-4", children ? "mr-2" : "")} aria-hidden="true" />}
         {children}
       </button>
     );
