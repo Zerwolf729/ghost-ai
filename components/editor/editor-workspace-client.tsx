@@ -5,6 +5,7 @@ import { useSidebar } from "./sidebar-context";
 import { EditorNavbar } from "./editor-navbar";
 import { ProjectSidebar } from "./project-sidebar";
 import { ProjectShareDialog } from "./project-share-dialog";
+import { BaseCanvas } from "./base-canvas";
 import { cn } from "@/lib/utils";
 import type { ProjectRow } from "@/lib/projects";
 
@@ -24,7 +25,7 @@ interface EditorWorkspaceClientProps {
  * - navbar actions: share button and AI sidebar toggle
  * - existing ProjectSidebar on the left
  * - current room highlighted in sidebar
- * - central canvas placeholder with dark background and centered message
+ * - central Liveblocks-backed React Flow canvas
  * - right sidebar placeholder for future AI chat
  */
 export function EditorWorkspaceClient({
@@ -75,13 +76,8 @@ export function EditorWorkspaceClient({
       >
         <div className="flex h-[calc(100vh-3.5rem)]">
           {/* Central canvas area */}
-          <div className="flex-1 flex items-center justify-center bg-bg-subtle">
-            <div className="flex flex-col items-center text-center space-y-4 px-4">
-              <h2 className="text-lg font-medium text-text-secondary">Canvas</h2>
-              <p className="text-sm text-text-muted max-w-sm">
-                Canvas logic coming soon. This is the workspace for {projectName}.
-              </p>
-            </div>
+          <div className="flex-1 flex bg-bg-subtle">
+            <BaseCanvas roomId={projectId} />
           </div>
 
           {/* Right sidebar placeholder for AI chat */}
