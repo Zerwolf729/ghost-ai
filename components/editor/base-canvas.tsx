@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useRef } from "react";
-import { ReactFlow, MiniMap, Background, BackgroundVariant, NodeTypes, ReactFlowProvider } from "@xyflow/react";
+import { ReactFlow, MiniMap, Background, BackgroundVariant, NodeTypes, ReactFlowProvider, useReactFlow, type ReactFlowInstance } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useLiveblocksFlow } from "@liveblocks/react-flow";
 import { LiveblocksCanvasWrapper } from "./liveblocks-canvas-wrapper";
@@ -15,6 +15,7 @@ const nodeTypes: NodeTypes = {
 
 function CanvasContent({ roomId }: { roomId: string }) {
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const reactFlow = useReactFlow();
   const { nodes, edges, onNodesChange, onEdgesChange, setNodes } = useLiveblocksFlow({
     nodes: [],
     edges: [],
@@ -31,11 +32,10 @@ function CanvasContent({ roomId }: { roomId: string }) {
     const data = JSON.parse(event.dataTransfer.getData("application/reactflow"));
     if (!wrapperRef.current) return;
 
-    const bounds = wrapperRef.current.getBoundingClientRect();
-    const position = {
-        x: event.clientX - bounds.left,
-        y: event.clientY - bounds.top
-    };
+    const position = reactFlow.screenToFlowPosition({
+      x: event.clientX,
+      y: event.clientY,
+    });
 
     const newNode = {
       id: `${data.shape}-${Date.now()}`,
@@ -44,8 +44,8 @@ function CanvasContent({ roomId }: { roomId: string }) {
       data: { label: "", color: "default", shape: data.shape as Shape },
     };
 
-    setNodes([...nodes, newNode]);
-  }, [nodes, setNodes]);
+    setNodes((nds) => [...nds, newNode]);
+  }, [setNodes, reactFlow]);
 
   return (
     <div ref={wrapperRef} style={{ width: "100%", height: "100%" }}>

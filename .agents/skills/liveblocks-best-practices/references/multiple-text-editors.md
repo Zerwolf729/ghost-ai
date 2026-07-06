@@ -46,7 +46,11 @@ function TextEditors() {
 
 function TextEditor({ field }: { field: string }) {
   const liveblocks = useLiveblocksExtension({
-    field: "editor-one",
+    field,
+  });
+
+  const editor = useEditor({
+    extensions: [liveblocks],
   });
 
   return (

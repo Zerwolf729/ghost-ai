@@ -33,6 +33,8 @@ export function ShapePanel() {
       {shapes.map(({ shape, icon }) => (
         <button
           key={shape}
+          type="button"
+          aria-label={`Add ${shape} shape`}
           className="p-3 bg-bg-base hover:bg-bg-elevated rounded-full cursor-grab"
           draggable
           onDragStart={(e) => onDragStart(e, shape)}
