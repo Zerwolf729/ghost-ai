@@ -128,13 +128,28 @@ Update this file whenever the current phase, active feature, or implementation s
     - Passes isOwner to workspace client
   - ✅ Build passes with no TypeScript errors
 
+## Completed
+
+- ...
+- **Implemented Liveblocks Infrastructure (2026-07-06):**
+  - ✅ Configured `liveblocks.config.ts` (Presence, UserMeta)
+  - ✅ Created cached Liveblocks node client in `lib/liveblocks.ts`
+  - ✅ Created auth route `POST /api/liveblocks-auth` with Clerk auth + project access
+  - ✅ Build passes
+
 ## In Progress
 
 - None
 
 ## Next Up
 
-- Implement canvas with React Flow and Liveblocks
+- **Implemented Base Canvas (2026-07-06):**
+  - ✅ Created `types/canvas.ts`
+  - ✅ Created `components/editor/liveblocks-canvas-wrapper.tsx`
+  - ✅ Created `components/editor/base-canvas.tsx`
+  - ✅ Integrated `BaseCanvas` into `EditorWorkspaceClient`
+  - ✅ Installed `react-error-boundary`
+  - ✅ Build passes
 
 ## Architecture Decisions
 
