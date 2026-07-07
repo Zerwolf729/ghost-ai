@@ -50,7 +50,7 @@ export function ProjectSidebar({
 
       <aside
         className={cn(
-          "fixed bottom-0 left-0 top-0 z-50 flex w-72 flex-col border-r border-border-default bg-bg-surface transition-transform duration-200",
+          "fixed bottom-0 left-0 top-0 z-50 flex w-64 flex-col border-r border-border-default bg-bg-surface transition-transform duration-200",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
@@ -68,15 +68,29 @@ export function ProjectSidebar({
 
         <div className="flex flex-1 flex-col overflow-hidden p-3">
           <Tabs key={`${activeProjectId ?? "home"}-${initialTab}`} className="flex flex-1 flex-col">
-            <TabsList className="w-full">
+            <TabsList className="w-full bg-bg-subtle rounded-lg p-0.5">
               <TabsTrigger
                 value="my-projects"
-                className="flex-1"
+                className={cn(
+                  "flex-1 rounded-md text-xs py-1.5 transition-all",
+                  activeTab === "my-projects"
+                    ? "bg-bg-surface text-text-primary shadow-sm"
+                    : "text-text-muted hover:text-text-secondary"
+                )}
                 onClick={() => setActiveTab("my-projects")}
               >
                 My Projects
               </TabsTrigger>
-              <TabsTrigger value="shared" className="flex-1" onClick={() => setActiveTab("shared")}>
+              <TabsTrigger
+                value="shared"
+                className={cn(
+                  "flex-1 rounded-md text-xs py-1.5 transition-all",
+                  activeTab === "shared"
+                    ? "bg-bg-surface text-text-primary shadow-sm"
+                    : "text-text-muted hover:text-text-secondary"
+                )}
+                onClick={() => setActiveTab("shared")}
+              >
                 Shared
               </TabsTrigger>
             </TabsList>

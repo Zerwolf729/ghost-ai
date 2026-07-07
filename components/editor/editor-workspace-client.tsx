@@ -1,12 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { useSidebar } from "./sidebar-context";
 import { EditorNavbar } from "./editor-navbar";
 import { ProjectSidebar } from "./project-sidebar";
 import { ProjectShareDialog } from "./project-share-dialog";
 import { BaseCanvas } from "./base-canvas";
-import { cn } from "@/lib/utils";
 import type { ProjectRow } from "@/lib/projects";
 
 interface EditorWorkspaceClientProps {
@@ -20,13 +19,13 @@ interface EditorWorkspaceClientProps {
 /**
  * Client wrapper for editor workspace.
  *
- * Full-viewport workspace layout with:
- * - top navbar showing project name
- * - navbar actions: share button and AI sidebar toggle
- * - existing ProjectSidebar on the left
- * - current room highlighted in sidebar
- * - central Liveblocks-backed React Flow canvas
- * - right sidebar placeholder for future AI chat
+ * CSS Grid layout using template areas:
+ *
+ *   "header header header"
+ *   "left   main   right"
+ *
+ * Left sidebar slides in/out via grid column width. Right sidebar always visible.
+ * Canvas fills center.
  */
 export function EditorWorkspaceClient({
   projectId,
@@ -49,48 +48,88 @@ export function EditorWorkspaceClient({
         />
       )}
 
-      {/* Navbar with project name and actions */}
-      <EditorNavbar
-        sidebarOpen={sidebarOpen}
-        onToggleSidebar={toggleSidebar}
-        projectName={projectName}
-        onOpenShare={() => setShareDialogOpen(true)}
-        isOwner={isOwner}
-      />
-
-      {/* Left sidebar */}
-      <ProjectSidebar
-        isOpen={sidebarOpen}
-        onClose={closeSidebar}
-        ownedProjects={initialOwnedProjects}
-        sharedProjects={initialSharedProjects}
-        activeProjectId={projectId}
-      />
-
-      {/* Main content area */}
-      <main
-        className={cn(
-          "flex-1 min-h-screen bg-base pt-14 transition-all duration-300 ease-in-out",
-          sidebarOpen ? "lg:ml-72" : "lg:ml-0"
-        )}
+      <div
+        className="grid h-screen w-screen overflow-hidden transition-all duration-300 ease-in-out"
+        style={{
+          gridTemplateColumns: sidebarOpen ? "256px 1fr 288px" : "0px 1fr 288px",
+          gridTemplateRows: "auto 1fr",
+          gridTemplateAreas: `"header header header"
+"left   main   right"`,
+        }}
       >
-        <div className="flex h-[calc(100vh-3.5rem)]">
-          {/* Central canvas area */}
-          <div className="flex-1 flex bg-bg-subtle">
-            <BaseCanvas roomId={projectId} />
+        {/* Header */}
+        <header style={{ gridArea: "header" }}>
+          <EditorNavbar
+            sidebarOpen={sidebarOpen}
+            onToggleSidebar={toggleSidebar}
+            projectName={projectName}
+            onOpenShare={() => setShareDialogOpen(true)}
+            isOwner={isOwner}
+          />
+        </header>
+
+        {/* Left sidebar */}
+        <aside
+          className="relative overflow-hidden"
+          style={{ gridArea: "left" }}
+        >
+          <ProjectSidebar
+            isOpen={sidebarOpen}
+            onClose={closeSidebar}
+            ownedProjects={initialOwnedProjects}
+            sharedProjects={initialSharedProjects}
+            activeProjectId={projectId}
+          />
+        </aside>
+
+        {/* Canvas */}
+        <main className="relative bg-bg-subtle overflow-hidden" style={{ gridArea: "main" }}>
+          <BaseCanvas roomId={projectId} />
+        </main>
+
+        {/* Right sidebar */}
+        <aside
+          className="flex flex-col border-l border-border-default bg-bg-surface overflow-hidden"
+          style={{ gridArea: "right" }}
+        >
+          {/* Chat header */}
+          <div className="flex items-center gap-2 border-b border-border-default px-4 py-3 shrink-0">
+            <div className="size-2 rounded-full bg-accent-ai" />
+            <h3 className="text-sm font-medium text-text-primary">AI Assistant</h3>
           </div>
 
-          {/* Right sidebar placeholder for AI chat */}
-          <aside className="w-80 shrink-0 border-l border-border-default bg-bg-surface hidden lg:block">
-            <div className="flex h-full items-center justify-center">
-              <div className="flex flex-col items-center text-center space-y-2 px-4">
-                <h3 className="text-sm font-medium text-text-secondary">AI Sidebar</h3>
-                <p className="text-xs text-text-muted">Coming soon</p>
+          {/* Messages area (placeholder) */}
+          <div className="flex-1 overflow-y-auto p-4">
+            <div className="flex flex-col gap-3">
+              <div className="max-w-[80%] self-start rounded-2xl rounded-bl-sm bg-bg-elevated px-3 py-2 text-xs text-text-secondary">
+                Hello! I can help you design your floor plan. Try asking me to add rooms, resize elements, or suggest layouts.
+              </div>
+              <div className="max-w-[80%] self-end rounded-2xl rounded-br-sm bg-accent-primary-dim px-3 py-2 text-xs text-text-primary">
+                Add a bedroom
               </div>
             </div>
-          </aside>
-        </div>
-      </main>
+          </div>
+
+          {/* Chat input */}
+          <div className="border-t border-border-default p-3 shrink-0">
+            <div className="flex items-center gap-2 rounded-xl bg-bg-elevated px-3 py-2">
+              <input
+                type="text"
+                placeholder="Ask AI..."
+                className="flex-1 bg-transparent text-xs text-text-primary placeholder-text-muted outline-none"
+                disabled
+              />
+              <button
+                type="button"
+                className="flex size-6 items-center justify-center rounded-lg bg-accent-ai text-white disabled:opacity-40"
+                disabled
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              </button>
+            </div>
+          </div>
+        </aside>
+      </div>
 
       {/* Share dialog */}
       <ProjectShareDialog

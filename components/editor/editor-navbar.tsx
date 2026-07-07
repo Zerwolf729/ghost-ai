@@ -1,7 +1,13 @@
 import React from "react";
-import { PanelLeftOpen, PanelLeftClose, Share2, MessageSquare } from "lucide-react";
+import {
+  PanelLeftOpen,
+  PanelLeftClose,
+  Share2,
+  MessageSquare,
+} from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface EditorNavbarProps {
   /**
@@ -45,7 +51,7 @@ export const EditorNavbar: React.FC<EditorNavbarProps> = ({
   isOwner,
 }) => {
   return (
-    <header className="fixed top-0 right-0 left-0 flex h-14 items-center justify-between border-b border-default bg-base px-4 z-40">
+    <header className="fixed top-0 right-0 left-0 flex h-14 items-center justify-between border-b border-default bg-base px-4 z-40">      
       {/* Left – sidebar toggle */}
       {sidebarOpen ? (
         <button
@@ -68,14 +74,17 @@ export const EditorNavbar: React.FC<EditorNavbarProps> = ({
       )}
 
       {/* Center – project name */}
-      <div className="flex-1 text-center min-w-0 px-2 max-w-[calc(100%-8rem)]">
+      <div
+        className={cn(
+          "text-center min-w-0 px-4",
+          projectName ? "flex-1 max-w-[calc(100%-10rem)]" : "flex-1",
+        )}
+      >
         {projectName ? (
           <span className="text-sm font-medium text-text-primary truncate block">
             {projectName}
           </span>
-        ) : (
-          <span className="text-text-muted text-sm block">Workspace</span>
-        )}
+        ) : null}
       </div>
 
       {/* Right – actions and user menu */}

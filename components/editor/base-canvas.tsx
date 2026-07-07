@@ -38,7 +38,7 @@ function CanvasContent({ roomId }: { roomId: string }) {
     });
 
     const newNode = {
-      id: `${data.shape}-${Date.now()}`,
+      id: `${data.shape}-${crypto.randomUUID()}`,
       type: 'canvasNode',
       position,
       data: { label: "", color: "default", shape: data.shape as Shape },
