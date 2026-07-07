@@ -27,9 +27,12 @@ export function normalizeEmail(email: string): string {
 export async function getClerkUserByEmail(email: string) {
   try {
     const client = await clerkClient();
-    const users = await client.users.getUserList({
+    const usersResult = await client.users.getUserList({
       emailAddress: [email],
     });
+
+    // getUserList returns PaginatedResourceResponse with a data property
+    const users = usersResult.data;
 
     return users.length > 0 ? users[0] : null;
   } catch (error) {

@@ -42,6 +42,11 @@ export function ProjectShareDialog({
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied">("idle");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [origin, setOrigin] = useState("");
+
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
 
   // Fetch collaborators
   const fetchCollaborators = async () => {
@@ -122,7 +127,8 @@ export function ProjectShareDialog({
   };
 
   const handleCopyLink = () => {
-    const projectUrl = `${window.location.origin}/editor/${projectId}`;
+    if (!origin) return;
+    const projectUrl = `${origin}/editor/${projectId}`;
     navigator.clipboard.writeText(projectUrl);
     setCopyStatus("copied");
     setTimeout(() => setCopyStatus("idle"), 2000);
@@ -142,7 +148,7 @@ export function ProjectShareDialog({
         <div className="flex items-center gap-2">
           <Input
             type="text"
-            value={`${window.location.origin}/editor/${projectId}`}
+            value={origin ? `${origin}/editor/${projectId}` : ""}
             readOnly
             className="flex-1 bg-bg-subtle border-border-subtle text-text-primary"
           />
@@ -222,6 +228,9 @@ export function ProjectShareDialog({
                 <li key={`${collab.email}-${index}`} className="flex items-center justify-between">
                   <div className="flex items-center gap-3 min-w-0">
                     <Avatar className="h-8 w-8 shrink-0">
+                      {collab.avatarUrl && (
+                        <AvatarImage src={collab.avatarUrl} alt={collab.name || collab.email} />
+                      )}
                       <AvatarFallback className="bg-accent-primary-dim text-accent-primary text-xs">
                         {collab.name ? collab.name.charAt(0).toUpperCase() : collab.email.charAt(0).toUpperCase()}
                       </AvatarFallback>
@@ -229,10 +238,8 @@ export function ProjectShareDialog({
                     <div className="grid gap-0.5 min-w-0">
                       <p className="text-sm font-medium text-text-primary truncate">
                         {collab.name || collab.email}
+                        {collab.isOwner && <span className="text-xs text-text-faint"> (Owner)</span>}
                       </p>
-                      {collab.isOwner && (
-                        <p className="text-xs text-text-faint">Owner</p>
-                      )}
                     </div>
                   </div>
 

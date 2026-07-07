@@ -68,13 +68,13 @@ export const EditorNavbar: React.FC<EditorNavbarProps> = ({
       )}
 
       {/* Center – project name */}
-      <div className="flex-1 text-center">
+      <div className="flex-1 text-center min-w-0 px-2 max-w-[calc(100%-8rem)]">
         {projectName ? (
-          <span className="text-sm font-medium text-text-primary truncate max-w-xs inline-block">
+          <span className="text-sm font-medium text-text-primary truncate block">
             {projectName}
           </span>
         ) : (
-          <span className="text-text-muted text-sm">Workspace</span>
+          <span className="text-text-muted text-sm block">Workspace</span>
         )}
       </div>
 

@@ -47,6 +47,8 @@ function CanvasContent({ roomId }: { roomId: string }) {
     setNodes((nds) => [...nds, newNode]);
   }, [setNodes, reactFlow]);
 
+  if (!nodes) return null;
+
   return (
     <div ref={wrapperRef} style={{ width: "100%", height: "100%" }}>
       <ReactFlow
