@@ -36,14 +36,20 @@ export function ProjectShareDialog({
 }: ProjectShareDialogProps) {
   const [email, setEmail] = useState("");
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
+  const [owner, setOwner] = useState<{ email: string; name: string; avatarUrl?: string | null } | null>(null);
   const [loading, setLoading] = useState(true);
   const [inviting, setInviting] = useState(false);
   const [removing, setRemoving] = useState<string | null>(null);
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied">("idle");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [origin, setOrigin] = useState("");
 
-  // Fetch collaborators
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
+
+  // Fetch collaborators and owner
   const fetchCollaborators = async () => {
     try {
       setLoading(true);
@@ -53,6 +59,7 @@ export function ProjectShareDialog({
 
       const data = await response.json();
       setCollaborators(data.collaborators || []);
+      setOwner(data.owner || null);
     } catch (err) {
       setError("Failed to load collaborators");
       console.error("Fetch collaborators error:", err);
@@ -122,7 +129,8 @@ export function ProjectShareDialog({
   };
 
   const handleCopyLink = () => {
-    const projectUrl = `${window.location.origin}/editor/${projectId}`;
+    if (!origin) return;
+    const projectUrl = `${origin}/editor/${projectId}`;
     navigator.clipboard.writeText(projectUrl);
     setCopyStatus("copied");
     setTimeout(() => setCopyStatus("idle"), 2000);
@@ -130,19 +138,19 @@ export function ProjectShareDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-bg-surface border-border-default">
+      <DialogContent className="sm:max-w-lg md:max-w-xl bg-bg-surface border-border-default p-6">
         <DialogHeader>
-          <DialogTitle className="text-text-primary">Share Project</DialogTitle>
-          <DialogDescription className="text-text-secondary">
+          <DialogTitle className="text-text-primary text-lg">Share Project</DialogTitle>
+          <DialogDescription className="text-text-secondary text-sm">
             Invite collaborators to {projectName}
           </DialogDescription>
         </DialogHeader>
 
         {/* Copy project link */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 mt-2">
           <Input
             type="text"
-            value={`${window.location.origin}/editor/${projectId}`}
+            value={origin ? `${origin}/editor/${projectId}` : ""}
             readOnly
             className="flex-1 bg-bg-subtle border-border-subtle text-text-primary"
           />
@@ -202,8 +210,29 @@ export function ProjectShareDialog({
           <p className="mt-2 text-sm text-state-success">{success}</p>
         )}
 
+        {/* Owner section */}
+        {owner && (
+          <div className="mt-5">
+            <h3 className="text-sm font-medium text-text-secondary mb-2">Owner</h3>
+            <div className="flex items-center gap-3 rounded-xl bg-bg-subtle px-3 py-2.5">
+              <Avatar className="h-8 w-8 shrink-0">
+                {owner.avatarUrl && (
+                  <AvatarImage src={owner.avatarUrl} alt={owner.name} />
+                )}
+                <AvatarFallback className="bg-accent-primary-dim text-accent-primary text-xs">
+                  {owner.name.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-text-primary truncate">{owner.name}</p>
+                <p className="text-xs text-text-muted truncate">{owner.email}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Collaborators list */}
-        <div className="mt-4 max-h-64 overflow-y-auto">
+        <div className="mt-5 max-h-72 overflow-y-auto">
           <h3 className="text-sm font-medium text-text-secondary mb-2">
             Collaborators
           </h3>
@@ -222,6 +251,9 @@ export function ProjectShareDialog({
                 <li key={`${collab.email}-${index}`} className="flex items-center justify-between">
                   <div className="flex items-center gap-3 min-w-0">
                     <Avatar className="h-8 w-8 shrink-0">
+                      {collab.avatarUrl && (
+                        <AvatarImage src={collab.avatarUrl} alt={collab.name || collab.email} />
+                      )}
                       <AvatarFallback className="bg-accent-primary-dim text-accent-primary text-xs">
                         {collab.name ? collab.name.charAt(0).toUpperCase() : collab.email.charAt(0).toUpperCase()}
                       </AvatarFallback>
@@ -229,10 +261,8 @@ export function ProjectShareDialog({
                     <div className="grid gap-0.5 min-w-0">
                       <p className="text-sm font-medium text-text-primary truncate">
                         {collab.name || collab.email}
+                        {collab.isOwner && <span className="text-xs text-text-faint"> (Owner)</span>}
                       </p>
-                      {collab.isOwner && (
-                        <p className="text-xs text-text-faint">Owner</p>
-                      )}
                     </div>
                   </div>
 

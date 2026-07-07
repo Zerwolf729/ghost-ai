@@ -193,7 +193,7 @@ inside a single notification.
       return (
         <InboxNotification.Custom
           {...props}
-          title={title}
+          title={activities[0].data.title}
           aside={<InboxNotification.Icon>❗</InboxNotification.Icon>}
         >
           {activities.map((activity) => (

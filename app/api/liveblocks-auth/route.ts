@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
   });
 
   // Authorize user for room
-  session.allow(room, session.READ_WRITE);
+  session.allow(room, ["*:write"]);
 
   // Authorize session
   const { status, body } = await session.authorize();

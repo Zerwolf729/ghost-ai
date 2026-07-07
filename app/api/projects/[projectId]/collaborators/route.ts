@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { auth, clerkClient } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
 import { getCurrentUserIdentity } from '@/lib/project-access';
 
@@ -39,6 +39,12 @@ export async function GET(
     // Check if user is owner or collaborator
     const isOwner = project.ownerId === userId;
 
+    const client = await clerkClient();
+    const ownerUser = await client.users.getUser(project.ownerId);
+
+    const ownerName = [ownerUser.firstName, ownerUser.lastName].filter(Boolean).join(" ") || "Unknown";
+    const ownerEmail = ownerUser.emailAddresses?.[0]?.emailAddress || "Unknown";
+
     const collaboratorEmails = await prisma.projectCollaborator.findMany({
       where: { projectId },
       select: { email: true, createdAt: true },
@@ -75,6 +81,11 @@ export async function GET(
     return NextResponse.json({
       collaborators: enrichedCollaborators,
       isOwner,
+      owner: {
+        email: ownerEmail,
+        name: ownerName,
+        avatarUrl: ownerUser.imageUrl || null,
+      },
     });
   } catch (error) {
     console.error('GET collaborators error:', error);
