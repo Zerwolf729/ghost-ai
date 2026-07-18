@@ -4,32 +4,21 @@ import {
   PanelLeftClose,
   Share2,
   MessageSquare,
+  Library,
 } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface EditorNavbarProps {
-  /**
-   * Whether the sidebar is currently open. Determines which icon to show.
-   */
-  sidebarOpen: boolean;
-  /**
-   * Callback to toggle the sidebar open state.
-   */
-  onToggleSidebar: () => void;
-  /**
-   * Project name to display in the center.
-   */
+  leftSidebarOpen: boolean;
+  onToggleLeftSidebar: () => void;
+  rightSidebarOpen: boolean;
+  onToggleRightSidebar: () => void;
   projectName?: string;
-  /**
-   * Callback when share button is clicked.
-   */
   onOpenShare?: () => void;
-  /**
-   * Whether current user is the project owner.
-   */
   isOwner?: boolean;
+  onOpenStarterTemplates?: () => void;
 }
 
 /**
@@ -44,32 +33,35 @@ interface EditorNavbarProps {
  * utilities (`bg-base`, `border-b`, `border-default`).
  */
 export const EditorNavbar: React.FC<EditorNavbarProps> = ({
-  sidebarOpen,
-  onToggleSidebar,
+  leftSidebarOpen,
+  onToggleLeftSidebar,
+  rightSidebarOpen,
+  onToggleRightSidebar,
   projectName,
   onOpenShare,
-  isOwner,
+  isOwner, // eslint-disable-line @typescript-eslint/no-unused-vars
+  onOpenStarterTemplates,
 }) => {
   return (
-    <header className="fixed top-0 right-0 left-0 flex h-14 items-center justify-between border-b border-default bg-base px-4 z-40">      
+    <header className="fixed top-0 right-0 left-0 flex h-14 items-center justify-between border-b border-border-default bg-bg-surface px-4 z-40">
       {/* Left – sidebar toggle */}
-      {sidebarOpen ? (
+      {leftSidebarOpen ? (
         <button
           type="button"
-          onClick={onToggleSidebar}
-          className="flex h-10 w-10 items-center justify-center rounded-md hover:bg-elevated"
-          aria-label="Close sidebar"
+          onClick={onToggleLeftSidebar}
+          className="flex h-10 w-10 items-center justify-center rounded-md hover:bg-bg-subtle"
+          aria-label="Close left sidebar"
         >
-          <PanelLeftClose className="h-5 w-5 text-primary" />
+          <PanelLeftClose className="h-5 w-5 text-text-primary" />
         </button>
       ) : (
         <button
           type="button"
-          onClick={onToggleSidebar}
-          className="flex h-10 w-10 items-center justify-center rounded-md hover:bg-elevated"
-          aria-label="Open sidebar"
+          onClick={onToggleLeftSidebar}
+          className="flex h-10 w-10 items-center justify-center rounded-md hover:bg-bg-subtle"
+          aria-label="Open left sidebar"
         >
-          <PanelLeftOpen className="h-5 w-5 text-primary" />
+          <PanelLeftOpen className="h-5 w-5 text-text-primary" />
         </button>
       )}
 
@@ -89,6 +81,19 @@ export const EditorNavbar: React.FC<EditorNavbarProps> = ({
 
       {/* Right – actions and user menu */}
       <div className="flex items-center gap-2">
+        {/* Starter Templates button */}
+        {onOpenStarterTemplates && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={onOpenStarterTemplates}
+            className="h-10 w-10 hover:bg-bg-subtle"
+            aria-label="Import starter template"
+          >
+            <Library className="h-5 w-5 text-text-secondary" />
+          </Button>
+        )}
         {/* Share button */}
         {onOpenShare && (
           <Button
@@ -96,7 +101,7 @@ export const EditorNavbar: React.FC<EditorNavbarProps> = ({
             variant="ghost"
             size="icon"
             onClick={onOpenShare}
-            className="h-10 w-10 hover:bg-elevated"
+            className="h-10 w-10 hover:bg-bg-subtle"
             aria-label="Share project"
           >
             <Share2 className="h-5 w-5 text-text-secondary" />
@@ -106,9 +111,12 @@ export const EditorNavbar: React.FC<EditorNavbarProps> = ({
         {/* AI sidebar toggle */}
         <button
           type="button"
-          className="flex h-10 w-10 items-center justify-center rounded-md hover:bg-elevated"
+          onClick={onToggleRightSidebar}
+          className={cn(
+            "flex h-10 w-10 items-center justify-center rounded-md hover:bg-bg-subtle",
+            rightSidebarOpen ? "bg-bg-subtle" : ""
+          )}
           aria-label="Toggle AI sidebar"
-          disabled
         >
           <MessageSquare className="h-5 w-5 text-text-secondary" />
         </button>
