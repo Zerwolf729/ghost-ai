@@ -1,0 +1,22 @@
+{
+  "id": "test-template",
+  "name": "Test Template",
+  "description": "Test template for shape debugging",
+  "nodes": [
+    {
+      "id": "node-1",
+      "type": "canvasNode",
+      "position": { "x": 100, "y": 100 },
+      "data": { "label": "Test 1", "color": "#00c8d4", "shape": "rectangle" },
+      "style": { "width": 120, "height": 60 }
+    },
+    {
+      "id": "node-2",
+      "type": "canvasNode",
+      "position": { "x": 300, "y": 100 },
+      "data": { "label": "Test 2", "color": "#6457f9", "shape": "circle" },
+      "style": { "width": 120, "height": 60 }
+    }
+  ],
+  "edges": []
+}

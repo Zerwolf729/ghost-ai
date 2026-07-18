@@ -1,20 +1,37 @@
 // Define Liveblocks types for your application
 // https://liveblocks.io/docs/api-reference/liveblocks-react#Typing-your-data
+import { LiveList, LiveObject } from "@liveblocks/client";
+
 declare global {
   interface Liveblocks {
-    // Each user's Presence, for useMyPresence, useOthers, etc.
     Presence: {
       cursor: { x: number; y: number } | null;
       isThinking: boolean;
     };
 
-    // The Storage tree for the room, for useMutation, useStorage, etc.
+    // This is defensively typed for the camera. The runtime
+    // "flow" node collection treats keys as sequential in the writable,
+    // so LiveList is still efficiently compatible with the typed forEach/get
+    // access used by the mutations across canvas-node-renderer.tsx and
+    // custom-canvas-edge.tsx.
     Storage: {
-      // Example, a conflict-free list
-      // animals: LiveList<string>;
+      flow: LiveObject<{
+        nodes: LiveList<LiveObject<{
+          data: LiveObject<{
+            label: string;
+            color?: string;
+            textColor?: string;
+            shape?: string;
+          }>;
+        }>>;
+        edges: LiveList<LiveObject<{
+          data: LiveObject<{
+            label?: string;
+          };
+        }>>;
+      }>;
     };
 
-    // Custom user info set when authenticating with a secret key
     UserMeta: {
       id: string;
       info: {
@@ -24,13 +41,8 @@ declare global {
       };
     };
 
-    // Custom events, for useBroadcastEvent, useEventListener
     RoomEvent: {};
-
-    // Custom metadata set on threads, for useThreads, useCreateThread, etc.
     ThreadMetadata: {};
-
-    // Custom room info set with resolveRoomsInfo, for useRoomInfo
     RoomInfo: {};
   }
 }

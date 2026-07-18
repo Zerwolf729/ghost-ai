@@ -139,7 +139,9 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## In Progress
 
-- None
+- **AI Generation Integration (2026-07-??):**
+  - 🔄 TODO: Add AI generation service for creating templates from prompts
+  - 🔄 TODO: Integrate AI generation into prompt input
 
 ## Next Up
 
