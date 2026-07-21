@@ -214,3 +214,4 @@ Update this file whenever the current phase, active feature, or implementation s
   - Fixed sidebar header height (`h-14`) to align with navbar height
 - Fixed `/editor` sidebar runtime error from `sharedProjects.some` when `sharedProjects` is undefined
 - Updated `/editor` sidebar to use `bg-bg-surface` with a right border and no glass/shadow effects
+  
