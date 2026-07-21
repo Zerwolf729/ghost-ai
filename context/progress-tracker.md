@@ -197,6 +197,7 @@ Update this file whenever the current phase, active feature, or implementation s
 - Sidebar starts at `top-14`, fills the remaining viewport height, and removes floating margins/radius/shadows
 - Main editor content shifts by the sidebar width (`lg:ml-72`) when the desktop sidebar is open
 - Fixed sidebar header height to `h-14` to align with the navbar
+
 ## Open Questions
 
 - Add unresolved product or implementation questions here.
@@ -214,4 +215,3 @@ Update this file whenever the current phase, active feature, or implementation s
   - Fixed sidebar header height (`h-14`) to align with navbar height
 - Fixed `/editor` sidebar runtime error from `sharedProjects.some` when `sharedProjects` is undefined
 - Updated `/editor` sidebar to use `bg-bg-surface` with a right border and no glass/shadow effects
-  
