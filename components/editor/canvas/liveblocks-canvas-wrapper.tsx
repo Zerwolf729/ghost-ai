@@ -1,6 +1,6 @@
 "use client";
 
-import { LiveObject, LiveList } from "@liveblocks/client";
+import { LiveMap, LiveObject } from "@liveblocks/client";
 import { LiveblocksProvider, RoomProvider, ClientSideSuspense } from "@liveblocks/react/suspense";
 import { ErrorBoundary } from "react-error-boundary";
 import { ReactNode } from "react";
@@ -20,8 +20,8 @@ export function LiveblocksCanvasWrapper({
           initialPresence={{ cursor: null, isThinking: false }}
           initialStorage={{
             flow: new LiveObject({
-              nodes: new LiveList([]),
-              edges: new LiveList([]),
+              nodes: new LiveMap(),
+              edges: new LiveMap(),
             }),
           }}
         >

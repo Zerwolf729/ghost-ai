@@ -1,11 +1,11 @@
 "use client";
 
 import React from "react";
-import { ProjectSidebar } from "./project-sidebar";
-import { CreateProjectDialog } from "./create-project-dialog";
-import { RenameProjectDialog } from "./rename-project-dialog";
-import { DeleteProjectDialog } from "./delete-project-dialog";
-import { ProjectDialogsProvider, useProjectDialogsContext } from "./project-dialogs-provider";
+import { ProjectSidebar } from "./projects/project-sidebar";
+import { CreateProjectDialog } from "./projects/create-project-dialog";
+import { RenameProjectDialog } from "./projects/rename-project-dialog";
+import { DeleteProjectDialog } from "./projects/delete-project-dialog";
+import { ProjectDialogsProvider, useProjectDialogsContext } from "./projects/project-dialogs-provider";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "./sidebar-context";
 import type { ProjectRow } from "@/lib/projects";

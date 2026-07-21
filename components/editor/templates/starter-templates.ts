@@ -1,6 +1,6 @@
 "use client";
 
-import { CanvasNode, CanvasEdge, Shape } from "@/types/canvas";
+import { CanvasNode, CanvasEdge, Shape, NODE_COLORS } from "@/types/canvas";
 
 export type CanvasTemplate = {
   id: string;
@@ -10,18 +10,32 @@ export type CanvasTemplate = {
   edges: CanvasEdge[];
 };
 
-function node(id: string, label: string, shape: Shape, color: string, x: number, y: number): CanvasNode {
+function node(
+  id: string,
+  label: string,
+  shape: Shape,
+  colorIndex: number,
+  x: number,
+  y: number
+): CanvasNode {
+  const color = NODE_COLORS[colorIndex % NODE_COLORS.length];
   return {
     id,
     type: "canvasNode",
     position: { x, y },
-    data: { label, color, shape },
-    style: { width: 120, height: 60 },
+    data: { label, fill: color.fill, text: color.text, shape },
+    style: { width: 160, height: 80 },
   };
 }
 
 function edge(id: string, source: string, target: string, label?: string): CanvasEdge {
-  return { id, type: "canvasEdge", source, target, label };
+  return {
+    id,
+    type: "canvasEdge",
+    source,
+    target,
+    ...(label !== undefined ? { data: { label } } : {}),
+  };
 }
 
 export const CANVAS_TEMPLATES: CanvasTemplate[] = [
@@ -30,12 +44,12 @@ export const CANVAS_TEMPLATES: CanvasTemplate[] = [
     name: "Microservices",
     description: "Distributed microservices with API gateway and service discovery",
     nodes: [
-      node("ms-1", "API Gateway", "rectangle", "#00c8d4", 100, 100),
-      node("ms-2", "Auth Service", "circle", "#6457f9", 300, 100),
-      node("ms-3", "User Service", "rectangle", "#00c8d4", 500, 100),
-      node("ms-4", "Postgres DB", "cylinder", "#2a2a30", 300, 250),
-      node("ms-5", "Redis Cache", "cylinder", "#2a2a30", 500, 250),
-      node("ms-6", "Payment Svc", "diamond", "#34d399", 700, 100),
+      node("ms-1", "API Gateway", "rectangle", 1, 100, 100),
+      node("ms-2", "Auth Service", "circle", 2, 320, 100),
+      node("ms-3", "User Service", "rectangle", 3, 540, 100),
+      node("ms-4", "Postgres DB", "cylinder", 0, 320, 240),
+      node("ms-5", "Redis Cache", "cylinder", 6, 540, 240),
+      node("ms-6", "Payment Svc", "diamond", 4, 760, 100),
     ],
     edges: [
       edge("ms-e1", "ms-1", "ms-2", "HTTP"),
@@ -50,12 +64,12 @@ export const CANVAS_TEMPLATES: CanvasTemplate[] = [
     name: "CI/CD Pipeline",
     description: "Build, test, and deployment automation workflow",
     nodes: [
-      node("ci-1", "Git Push", "rectangle", "#111114", 100, 100),
-      node("ci-2", "GitHub Actions", "hexagon", "#6457f9", 300, 100),
-      node("ci-3", "Build App", "rectangle", "#00c8d4", 500, 100),
-      node("ci-4", "Unit Tests", "pill", "#fbbf24", 700, 100),
-      node("ci-5", "Docker Build", "cylinder", "#ff4d4f", 500, 300),
-      node("ci-6", "Deploy", "diamond", "#34d399", 700, 300),
+      node("ci-1", "Git Push", "rectangle", 0, 100, 100),
+      node("ci-2", "GitHub Actions", "hexagon", 2, 320, 100),
+      node("ci-3", "Build App", "rectangle", 1, 540, 100),
+      node("ci-4", "Unit Tests", "pill", 3, 760, 100),
+      node("ci-5", "Docker Build", "cylinder", 4, 540, 260),
+      node("ci-6", "Deploy", "diamond", 6, 760, 260),
     ],
     edges: [
       edge("ci-e1", "ci-1", "ci-2"),
@@ -70,11 +84,11 @@ export const CANVAS_TEMPLATES: CanvasTemplate[] = [
     name: "Event-Driven System",
     description: "Reactive system using message queues for microservices",
     nodes: [
-      node("ed-1", "HTTP Service", "rectangle", "#00c8d4", 100, 100),
-      node("ed-2", "Kafka Broker", "hexagon", "#111114", 300, 100),
-      node("ed-3", "Order Service", "diamond", "#6457f9", 500, 100),
-      node("ed-4", "Inventory", "rectangle", "#34d399", 300, 300),
-      node("ed-5", "Notifications", "pill", "#fbbf24", 500, 300),
+      node("ed-1", "HTTP Service", "rectangle", 1, 100, 100),
+      node("ed-2", "Kafka Broker", "hexagon", 0, 320, 100),
+      node("ed-3", "Order Service", "diamond", 2, 540, 100),
+      node("ed-4", "Inventory", "rectangle", 6, 320, 260),
+      node("ed-5", "Notifications", "pill", 3, 540, 260),
     ],
     edges: [
       edge("ed-e1", "ed-1", "ed-2", "publish"),

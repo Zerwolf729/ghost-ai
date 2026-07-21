@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect, useMemo } from "react";
 import {
   ReactFlow,
   Background,
@@ -8,18 +8,23 @@ import {
   NodeTypes,
   ReactFlowProvider,
   useReactFlow,
+  ConnectionMode,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useLiveblocksFlow } from "@liveblocks/react-flow";
-import { ConnectionMode } from "@xyflow/react";
-import { useUndo, useRedo, useCanUndo, useCanRedo } from "@liveblocks/react";
+import { useUndo, useRedo, useCanUndo, useCanRedo, useMyPresence, useMutation } from "@liveblocks/react";
 import { LiveblocksCanvasWrapper } from "./liveblocks-canvas-wrapper";
 import { ShapePanel } from "./shape-panel";
-import CanvasNodeRenderer from "./CanvasNodeRenderer";
+import CanvasNodeRenderer from "./canvas-node-renderer";
 import { CustomCanvasEdge } from "./custom-canvas-edge";
-import { ControlBar } from "./control-bar";
-import { CanvasTemplate } from "./starter-templates";
+import { ControlBar } from "./canvas-controls";
+import { CanvasTemplate } from "../templates/starter-templates";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { useCanvasAutosave } from "@/hooks/use-canvas-autosave";
 import { Shape } from "@/types/canvas";
+import { Loader2 } from "lucide-react";
+import { CollaboratorAvatars } from "./collaborator-avatars";
+import { PresenceCursors } from "./presence-cursors";
 
 const nodeTypes: NodeTypes = {
   canvasNode: CanvasNodeRenderer,
@@ -120,9 +125,15 @@ function ShapeDragPreview({
 function CanvasContent({
   importTemplate,
   clearImportTemplate,
+  projectId,
+  onSaveStatusChange,
+  onSaveNowRef,
 }: {
   importTemplate: CanvasTemplate | null;
   clearImportTemplate: () => void;
+  projectId: string;
+  onSaveStatusChange?: (status: "idle" | "saving" | "saved" | "error") => void;
+  onSaveNowRef?: (fn: () => void) => void;
 }) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const { nodes, edges, onNodesChange, onEdgesChange, onConnect } =
@@ -131,49 +142,91 @@ function CanvasContent({
       edges: { initial: [] },
     });
 
+  const [autosaveEnabled, setAutosaveEnabled] = useState(false);
+  const { status, saveNow } = useCanvasAutosave({
+    projectId,
+    enabled: autosaveEnabled,
+    onStatusChange: onSaveStatusChange,
+  });
+
+  // Expose saveNow to parent
+  useEffect(() => {
+    onSaveNowRef?.(saveNow);
+  }, [saveNow, onSaveNowRef]);
+
   const undo = useUndo();
   const redo = useRedo();
   const canUndo = useCanUndo();
   const canRedo = useCanRedo();
+  const [, updateMyPresence] = useMyPresence();
 
   const [preview, setPreview] = useState<PreviewState>(null);
   const previewRef = useRef<PreviewState>(null);
-  const { setNodes, setEdges } = useReactFlow();
+  const { setNodes, setEdges, zoomIn, zoomOut, screenToFlowPosition } = useReactFlow();
 
-  // Store reactFlow instance ref for keyboard shortcuts
-  const reactFlowInstanceRef = useRef<any>(null);
+  useKeyboardShortcuts({ zoomIn, zoomOut, undo, redo });
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement;
-      const isEditable =
-        target.isContentEditable ||
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.closest('[contenteditable="true"]') !== null;
+  // Delete key handler — removes selected nodes/edges via Liveblocks storage
+  const deleteSelected = useMutation(
+    ({ storage }, nodeIds: string[], edgeIds: string[]) => {
+      const flow = storage.get("flow");
+      const nodesMap = flow.get("nodes");
+      const edgesMap = flow.get("edges");
+      nodeIds.forEach((id) => nodesMap.delete(id));
+      edgeIds.forEach((id) => edgesMap.delete(id));
+    },
+    []
+  );
 
-      if (isEditable) return;
-
-      if (event.key === "+" || event.key === "=") {
-        event.preventDefault();
-        reactFlowInstanceRef.current?.zoomIn({ duration: 200 });
-      } else if (event.key === "-") {
-        event.preventDefault();
-        reactFlowInstanceRef.current?.zoomOut({ duration: 200 });
-      } else if ((event.metaKey || event.ctrlKey) && event.key === "z") {
-        event.preventDefault();
-        if (event.shiftKey) redo();
-        else undo();
-      } else if ((event.metaKey || event.ctrlKey) && event.key === "y") {
-        event.preventDefault();
-        redo();
+  const onKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      if (event.key !== "Delete" && event.key !== "Backspace") return;
+      const target = event.target;
+      if (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        (target instanceof HTMLElement && target.isContentEditable)
+      ) {
+        return;
       }
-    };
+      event.preventDefault();
 
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [undo, redo]);
+      // Convert LiveMaps to arrays for filtering
+      const nodesArray = Array.from((nodes as any)?.values?.() ?? []);
+      const edgesArray = Array.from((edges as any)?.values?.() ?? []);
+      const selectedNodeIds = nodesArray
+        .filter((n: any) => n.selected)
+        .map((n: any) => n.id);
+      const selectedEdgeIds = edgesArray
+        .filter((e: any) => e.selected)
+        .map((e: any) => e.id);
+
+      if (selectedNodeIds.length === 0 && selectedEdgeIds.length === 0) return;
+      deleteSelected(selectedNodeIds, selectedEdgeIds);
+    },
+    [nodes, edges, deleteSelected]
+  );
+
+  useEffect(() => {
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onKeyDown]);
+
+  // Broadcast cursor position via Liveblocks presence
+  const onMouseMove = useCallback(
+    (event: React.MouseEvent) => {
+      const position = screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
+      });
+      updateMyPresence({ cursor: { x: position.x, y: position.y } });
+    },
+    [screenToFlowPosition, updateMyPresence]
+  );
+
+  const onMouseLeave = useCallback(() => {
+    updateMyPresence({ cursor: null });
+  }, [updateMyPresence]);
 
   // Apply starter template
   useEffect(() => {
@@ -184,6 +237,87 @@ function CanvasContent({
       clearImportTemplate();
     }
   }, [importTemplate, clearImportTemplate, setNodes, setEdges]);
+
+  // Load saved canvas when room is empty
+  const [loadingSaved, setLoadingSaved] = useState(false);
+  const [restoreError, setRestoreError] = useState<string | null>(null);
+  const restoreAttempted = useRef(false);
+
+  useEffect(() => {
+    if (restoreAttempted.current) return;
+    if (!nodes || !edges) return;
+    restoreAttempted.current = true;
+
+    const hasExisting = Array.from(nodes.values()).length > 0;
+    if (hasExisting) {
+      onSaveStatusChange?.("idle");
+      setAutosaveEnabled(true);
+      return;
+    }
+
+    let cancelled = false;
+    setLoadingSaved(true);
+    setRestoreError(null);
+
+    fetch(`/api/projects/${projectId}/canvas`)
+      .then(async (res) => {
+        if (!res.ok) {
+          if (res.status === 404) return null;
+          const text = await res.text();
+          throw new Error(`Canvas fetch failed: ${res.status} ${text}`);
+        }
+        return res.json();
+      })
+      .then((data) => {
+        if (!data || cancelled) return;
+        if (data.nodes && Object.keys(data.nodes).length > 0) {
+          const convertedNodes = Object.entries(data.nodes).map(
+            ([id, n]) => {
+              const node = n as any;
+              return {
+                id,
+                type: "canvasNode",
+                position: node.position ?? { x: 0, y: 0 },
+                data: node.data ?? { label: "" },
+              };
+            }
+          );
+          setNodes(convertedNodes);
+        }
+        if (data.edges && Object.keys(data.edges).length > 0) {
+          const convertedEdges = Object.entries(data.edges).map(
+            ([id, n]) => {
+              const edge = n as any;
+              return {
+                id,
+                type: "canvasEdge",
+                source: edge.source ?? "",
+                target: edge.target ?? "",
+                data: edge.data ?? {},
+              };
+            }
+          );
+          setEdges(convertedEdges);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          console.error("Failed to restore canvas:", err);
+          setRestoreError(err.message || "Failed to load saved canvas");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoadingSaved(false);
+          setAutosaveEnabled(true);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+    // run once when Liveblocks storage is first available
+  }, [nodes]);
 
   // Update ref whenever preview changes
   useEffect(() => {
@@ -203,20 +337,24 @@ function CanvasContent({
       const raw = event.dataTransfer.getData("application/ghost-shape");
       if (!raw || !wrapperRef.current) return;
 
-      const payload = JSON.parse(raw);
+      let payload;
+      try {
+        payload = JSON.parse(raw);
+      } catch {
+        return;
+      }
+
       const shape = payload.shape as Shape;
       const size = payload.size ?? { width: 150, height: 100 };
 
-      const flowInstance = reactFlowInstanceRef.current;
-      if (!flowInstance) return;
-
-      const center = flowInstance.screenToFlowPosition({
+      // Convert screen position to flow position; center node on cursor
+      const flowPos = screenToFlowPosition({
         x: event.clientX,
         y: event.clientY,
       });
       const position = {
-        x: center.x - size.width / 2,
-        y: center.y - size.height / 2,
+        x: flowPos.x - size.width / 2,
+        y: flowPos.y - size.height / 2,
       };
 
       const newNode = {
@@ -227,14 +365,14 @@ function CanvasContent({
         height: size.height,
         data: {
           label: "",
-          color: "default",
+          fill: "default",
           shape,
         },
       };
 
       setNodes((nds) => [...nds, newNode]);
     },
-    [wrapperRef, setNodes]
+    [wrapperRef, setNodes, screenToFlowPosition]
   );
 
   const handleDragStart = useCallback(
@@ -270,7 +408,14 @@ function CanvasContent({
   if (!nodes) return null;
 
   return (
-    <div ref={wrapperRef} style={{ width: "100%", height: "100%" }}>
+    <div ref={wrapperRef} style={{ width: "100%", height: "100%" }} className="relative">
+      {loadingSaved && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-bg-base/50 backdrop-blur-sm">
+          <Loader2 className="h-8 w-8 animate-spin text-accent-primary" />
+        </div>
+      )}
+      <CollaboratorAvatars />
+      <PresenceCursors />
       {preview && (
         <ShapeDragPreview
           shape={preview.shape}
@@ -294,15 +439,13 @@ function CanvasContent({
           animated: false,
           data: { persistent: true },
         }}
-        fitView
         connectionMode={ConnectionMode.Loose}
         isValidConnection={() => true}
         connectOnClick
         snapGrid={[20, 20]}
-        onInit={(instance) => {
-          reactFlowInstanceRef.current = instance;
-        }}
         onConnect={onConnect}
+        onMouseMove={onMouseMove}
+        onMouseLeave={onMouseLeave}
       >
         <svg>
           <defs>
@@ -337,10 +480,16 @@ export function BaseCanvas({
   roomId,
   importTemplate,
   clearImportTemplate,
+  projectId,
+  onSaveStatusChange,
+  onSaveNowRef,
 }: {
   roomId: string;
   importTemplate: CanvasTemplate | null;
   clearImportTemplate: () => void;
+  projectId?: string;
+  onSaveStatusChange?: (status: "idle" | "saving" | "saved" | "error") => void;
+  onSaveNowRef?: (fn: () => void) => void;
 }) {
   return (
     <LiveblocksCanvasWrapper roomId={roomId}>
@@ -348,6 +497,9 @@ export function BaseCanvas({
         <CanvasContent
           importTemplate={importTemplate}
           clearImportTemplate={clearImportTemplate}
+          projectId={projectId ?? roomId}
+          onSaveStatusChange={onSaveStatusChange}
+          onSaveNowRef={onSaveNowRef}
         />
       </ReactFlowProvider>
     </LiveblocksCanvasWrapper>

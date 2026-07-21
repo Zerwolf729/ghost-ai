@@ -25,9 +25,7 @@ function EditorLayoutInner({ children }: { children: React.ReactNode }) {
     <aside
       className="fixed left-0 top-14 z-30 h-[calc(100vh-56px)] w-64 border-r border-border-default bg-bg-surface overflow-hidden transition-transform duration-300"
       style={{ transform: isLeftOpen ? "translateX(0)" : "translateX(-100%)" }}
-    >
-      {children}
-    </aside>
+    />
   );
 
   const rightSidebar = (
@@ -82,6 +80,7 @@ function EditorLayoutInner({ children }: { children: React.ReactNode }) {
         onToggleLeftSidebar={toggleLeft}
         rightSidebarOpen={isRightOpen}
         onToggleRightSidebar={toggleRight}
+        isWorkspace={false}
       />
       <main className="relative h-screen w-screen overflow-hidden pt-14">
         {leftSidebar}

@@ -1,6 +1,6 @@
 // Define Liveblocks types for your application
 // https://liveblocks.io/docs/api-reference/liveblocks-react#Typing-your-data
-import { LiveList, LiveObject } from "@liveblocks/client";
+import { LiveMap, LiveObject } from "@liveblocks/client";
 
 declare global {
   interface Liveblocks {
@@ -16,18 +16,18 @@ declare global {
     // custom-canvas-edge.tsx.
     Storage: {
       flow: LiveObject<{
-        nodes: LiveList<LiveObject<{
+        nodes: LiveMap<string, LiveObject<{
           data: LiveObject<{
             label: string;
-            color?: string;
-            textColor?: string;
+            fill?: string;
+            text?: string;
             shape?: string;
           }>;
         }>>;
-        edges: LiveList<LiveObject<{
+        edges: LiveMap<string, LiveObject<{
           data: LiveObject<{
             label?: string;
-          };
+          }>;
         }>>;
       }>;
     };

@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import { getProjectIfAccessible } from "@/lib/project-access";
 import { getOwnedProjects, getSharedProjects } from "@/lib/projects";
-import { AccessDenied } from "@/components/editor/access-denied";
+import { AccessDenied } from "@/components/editor/projects/access-denied";
 import { EditorWorkspaceClient } from "@/components/editor/editor-workspace-client";
 
 interface EditorWorkspacePageProps {
