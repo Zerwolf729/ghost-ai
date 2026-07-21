@@ -19,25 +19,27 @@ Add shared AI activity indicators so everyone in the room can see when generatio
 
 3. Add status message validation.
    - define the feed payload schema in `types/tasks.ts`
-   - the payload should support an optional `text` field
-   - validate incoming messages before displaying them
+   - require a status field such as `started`, `completed`, or `failed`
+   - support an optional `text` field for the user-facing message
+   - define which terminal statuses (`completed`, `failed`) clear the active-generation UI
+   - validate incoming messages against the schema before displaying them
 
 4. Add thinking indicators to live cursors.
-   - when a participant has `thinking: true` in presence, show a small spinner in their cursor name badge
-   - hide the spinner when `thinking` is false or missing
+   - when a participant has `isThinking: true` in presence, show a small spinner in their cursor name badge
+   - hide the spinner when `isThinking` is false or missing
 
 ## Scope Limits
 
-- don’t add actual AI generation logic
-- don’t trigger background tasks yet
-- don’t block or dim the whole sidebar
-- don’t show full feed history
+- don't add actual AI generation logic
+- don't trigger background tasks yet
+- don't block or dim the whole sidebar
+- don't show full feed history
 - keep this focused on shared AI activity state only
 
 ## Check When Done
 
 - Sidebar can render shared AI status from `ai-status-feed`.
 - Chat input and send button respond to active generation state.
-- Cursor badges read `thinking` from presence.
+- Cursor badges read `isThinking` from presence.
 - Feed messages are validated through the task schema.
 - `npm run build` passes.
