@@ -4,12 +4,12 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Handle, Position, NodeResizer, NodeToolbar } from "@xyflow/react";
 import type { NodeProps } from "@xyflow/react";
 import { useMutation } from "@liveblocks/react";
-import { LiveObject } from "@liveblocks/client";
-import type { CanvasNode, Shape } from "@/types/canvas";
-import { NODE_COLOR_PALETTE } from "@/types/canvas";
+import { LiveMap, LiveObject } from "@liveblocks/client";
+import type { Shape } from "@/types/canvas";
+import { NODE_COLORS, type NodeColorPair } from "@/types/canvas";
 
-const DEFAULT_BG = NODE_COLOR_PALETTE[0].bg;
-const DEFAULT_TEXT = NODE_COLOR_PALETTE[0].text;
+const DEFAULT_FILL = NODE_COLORS[0].fill;
+const DEFAULT_TEXT = NODE_COLORS[0].text;
 const BORDER_REST = "rgba(255,255,255,0.1)";
 const BORDER_SELECTED = "rgba(255,255,255,0.35)";
 const RESIZER_COLOR = "rgba(255,255,255,0.3)";
@@ -97,14 +97,14 @@ function cssBorderRadius(shape: Shape): string {
 
 // --- Color Swatch ---
 
-function ColorSwatch({
-  pair,
+function FillSwatch({
+  color,
   isActive,
   onSelect,
 }: {
-  pair: (typeof NODE_COLOR_PALETTE)[number];
+  color: NodeColorPair;
   isActive: boolean;
-  onSelect: (bg: string, text: string) => void;
+  onSelect: (fill: string, text: string) => void;
 }) {
   return (
     <button
@@ -113,22 +113,61 @@ function ColorSwatch({
         width: 20,
         height: 20,
         borderRadius: "50%",
-        background: pair.bg,
-        border: isActive ? `2px solid ${pair.text}` : "2px solid rgba(255,255,255,0.12)",
+        background: color.fill,
+        border: isActive ? `2px solid ${color.text}` : "2px solid rgba(255,255,255,0.12)",
         cursor: "pointer",
         flexShrink: 0,
         outline: "none",
         transition: "box-shadow 0.12s",
       }}
       onMouseEnter={(e) => {
-        (e.currentTarget as HTMLButtonElement).style.boxShadow = `0 0 5px 2px ${pair.text}55`;
+        (e.currentTarget as HTMLButtonElement).style.boxShadow = `0 0 5px 2px ${color.text}55`;
       }}
       onMouseLeave={(e) => {
         (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
       }}
       onClick={(e) => {
         e.stopPropagation();
-        onSelect(pair.bg, pair.text);
+        onSelect(color.fill, color.text);
+      }}
+      onMouseDown={(e) => e.stopPropagation()}
+      onPointerDown={(e) => e.stopPropagation()}
+    />
+  );
+}
+
+function TextSwatch({
+  color,
+  isActive,
+  onSelect,
+}: {
+  color: string;
+  isActive: boolean;
+  onSelect: (text: string) => void;
+}) {
+  return (
+    <button
+      className="nodrag nopan"
+      style={{
+        width: 20,
+        height: 20,
+        borderRadius: "50%",
+        background: color,
+        border: isActive ? "2px solid rgba(255,255,255,0.6)" : "2px solid rgba(255,255,255,0.12)",
+        cursor: "pointer",
+        flexShrink: 0,
+        outline: "none",
+        transition: "box-shadow 0.12s",
+      }}
+      onMouseEnter={(e) => {
+        (e.currentTarget as HTMLButtonElement).style.boxShadow = `0 0 5px 2px ${color}55`;
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
+      }}
+      onClick={(e) => {
+        e.stopPropagation();
+        onSelect(color);
       }}
       onMouseDown={(e) => e.stopPropagation()}
       onPointerDown={(e) => e.stopPropagation()}
@@ -139,13 +178,13 @@ function ColorSwatch({
 // --- Main component ---
 
 type LiveNodeData = LiveObject<{
-  data: LiveObject<{ label: string; color?: string; textColor?: string; shape?: Shape }>;
+  data: LiveObject<{ label: string; fill?: string; text?: string; shape?: Shape }>;
 }>;
 
 export default function CanvasNodeRenderer(props: any) {
   const { id, data, selected } = props;
-  const fill = data.color ?? DEFAULT_BG;
-  const textColor = data.textColor ?? DEFAULT_TEXT;
+  const fill = data.fill ?? DEFAULT_FILL;
+  const textColor = data.text ?? DEFAULT_TEXT;
   const shape = data.shape ?? "rectangle";
   const stroke = selected ? BORDER_SELECTED : BORDER_REST;
   const isSvg = isSvgShape(shape);
@@ -153,24 +192,40 @@ export default function CanvasNodeRenderer(props: any) {
   const [isEditing, setIsEditing] = useState(false);
   const editRef = useRef<HTMLDivElement>(null);
 
+  // Unique text colors for the text color picker (excluding fill colors)
+  const textColorOptions = ["#EDEDED", "#52A8FF", "#BF7AF0", "#FF990A", "#FF6166", "#F75F8F", "#62C073", "#0AC7B4"];
+
   // Update label in Liveblocks storage
   const updateNodeLabel = useMutation(
     ({ storage }, newLabel: string) => {
-      const node = storage.get("flow").get("nodes").get(id);
+      const nodes = storage.get("flow").get("nodes");
+      const node = (nodes as unknown as LiveMap<string, LiveNodeData>).get(id);
       if (!node) return;
-      (node as unknown as LiveNodeData).get("data").set("label", newLabel);
+      node.get("data").set("label", newLabel);
     },
     [id]
   );
 
-  // Update color in Liveblocks storage
-  const updateNodeColor = useMutation(
-    ({ storage }, colorBg: string, colorText: string) => {
-      const node = storage.get("flow").get("nodes").get(id);
+  // Update fill color in Liveblocks storage
+  const updateNodeFill = useMutation(
+    ({ storage }, fillBg: string, fillText: string) => {
+      const nodes = storage.get("flow").get("nodes");
+      const node = (nodes as unknown as LiveMap<string, LiveNodeData>).get(id);
       if (!node) return;
-      const liveData = (node as unknown as LiveNodeData).get("data");
-      liveData.set("color", colorBg);
-      liveData.set("textColor", colorText);
+      const liveData = node.get("data");
+      liveData.set("fill", fillBg);
+      liveData.set("text", fillText);
+    },
+    [id]
+  );
+
+  // Update text color in Liveblocks storage
+  const updateNodeTextColor = useMutation(
+    ({ storage }, textColor: string) => {
+      const nodes = storage.get("flow").get("nodes");
+      const node = (nodes as unknown as LiveMap<string, LiveNodeData>).get(id);
+      if (!node) return;
+      node.get("data").set("text", textColor);
     },
     [id]
   );
@@ -238,17 +293,36 @@ export default function CanvasNodeRenderer(props: any) {
         lineStyle={RESIZER_LINE_STYLE}
       />
 
-      {/* Color toolbar */}
+      {/* Color toolbar — fill + text colors */}
       <NodeToolbar isVisible={selected ?? false} position={Position.Top}>
-        <div className="nodrag nopan flex items-center gap-1.5 rounded-full border border-border-default bg-bg-surface/95 px-2.5 py-1.5 shadow-xl backdrop-blur-xl">
-          {NODE_COLOR_PALETTE.map((pair) => (
-            <ColorSwatch
-              key={pair.bg}
-              pair={pair}
-              isActive={pair.bg === fill}
-              onSelect={updateNodeColor}
-            />
-          ))}
+        <div className="nodrag nopan flex items-center gap-2 rounded-full border border-border-default bg-bg-surface/95 px-3 py-2 shadow-xl backdrop-blur-xl">
+          {/* Fill colors */}
+          <div className="flex items-center gap-1">
+            <span className="mr-1 text-[10px] text-text-muted">Fill</span>
+            {NODE_COLORS.map((color) => (
+              <FillSwatch
+                key={color.fill}
+                color={color}
+                isActive={color.fill === fill}
+                onSelect={updateNodeFill}
+              />
+            ))}
+          </div>
+
+          <div className="mx-1 h-5 w-px bg-border-default" />
+
+          {/* Text colors */}
+          <div className="flex items-center gap-1">
+            <span className="mr-1 text-[10px] text-text-muted">Text</span>
+            {textColorOptions.map((color) => (
+              <TextSwatch
+                key={color}
+                color={color}
+                isActive={color === textColor}
+                onSelect={updateNodeTextColor}
+              />
+            ))}
+          </div>
         </div>
       </NodeToolbar>
 
@@ -265,7 +339,7 @@ export default function CanvasNodeRenderer(props: any) {
           {labelContent}
         </>
       ) : (
-        /* HTML shapes (rectangle, circle, pill, triangle, database) */
+        /* HTML shapes (rectangle, circle, pill) */
         <div
           style={{
             background: fill,
@@ -297,6 +371,13 @@ export default function CanvasNodeRenderer(props: any) {
       )}
 
       {/* Connector handles — visible on hover or selected */}
+      {/* Target handles */}
+      <Handle id="top-target" type="target" position={Position.Top} className={HANDLE_CLS} />
+      <Handle id="bottom-target" type="target" position={Position.Bottom} className={HANDLE_CLS} />
+      <Handle id="left-target" type="target" position={Position.Left} className={HANDLE_CLS} />
+      <Handle id="right-target" type="target" position={Position.Right} className={HANDLE_CLS} />
+
+      {/* Source handles */}
       <Handle id="top" type="source" position={Position.Top} className={HANDLE_CLS} />
       <Handle id="bottom" type="source" position={Position.Bottom} className={HANDLE_CLS} />
       <Handle id="left" type="source" position={Position.Left} className={HANDLE_CLS} />

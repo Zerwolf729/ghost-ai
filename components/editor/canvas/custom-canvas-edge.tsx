@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { BaseEdge, EdgeLabelRenderer, getSmoothStepPath, type EdgeProps } from "@xyflow/react";
 import { useMutation } from "@liveblocks/react";
-import { LiveObject } from "@liveblocks/client";
+import { LiveMap, LiveObject } from "@liveblocks/client";
 
 type LiveEdgeData = LiveObject<{
   data: LiveObject<{ label?: string }>;
@@ -27,9 +27,10 @@ export function CustomCanvasEdge({
 
   const updateEdgeLabel = useMutation(
     ({ storage }, newLabel: string) => {
-      const edge = storage.get("flow").get("edges").get(id);
+      const edges = storage.get("flow").get("edges");
+      const edge = (edges as unknown as LiveMap<string, LiveEdgeData>).get(id);
       if (!edge) return;
-      (edge as unknown as LiveEdgeData).get("data").set("label", newLabel);
+      edge.get("data").set("label", newLabel);
     },
     [id]
   );

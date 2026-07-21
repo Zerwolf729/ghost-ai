@@ -137,6 +137,43 @@ Update this file whenever the current phase, active feature, or implementation s
   - ✅ Created auth route `POST /api/liveblocks-auth` with Clerk auth + project access
   - ✅ Build passes
 
+## Completed
+
+- **Implemented Canvas Autosave (2026-07-20):**
+  - ✅ Installed `@vercel/blob` package
+  - ✅ `app/api/projects/[projectId]/canvas/route.ts` — PUT/GET routes:
+    - PUT: uploads canvas JSON to Vercel Blob, stores blob URL in Prisma `canvasJsonPath`
+    - GET: fetches saved canvas JSON via Prisma-stored blob URL
+    - Owner-only write access enforced
+  - ✅ `hooks/use-canvas-autosave.ts` — debounced autosave hook:
+    - Watches Liveblocks storage (nodes + edges)
+    - Debounces writes to 3s
+    - Tracks status: idle → saving → saved → error
+    - `enabled` flag prevents saves during canvas restore
+  - ✅ `base-canvas.tsx` — canvas restore + autosave wiring:
+    - Loads saved canvas when room is empty on connect
+    - Skips load if Liveblocks room already has active nodes/edges
+    - Enables autosave only after restore completes (avoids write-back loop)
+    - Loading spinner overlay while restoring
+    - Props: `projectId`, `onSaveStatusChange` threaded through
+  - ✅ `editor-navbar.tsx` — save status indicator:
+    - Shows Saving… (spinner), Saved (checkmark), or Save failed (error icon)
+  - ✅ `editor-workspace-client.tsx` — lifts `saveStatus` state, passes to navbar + canvas
+  - ✅ Project schema already had `canvasJsonPath?` field — no migration needed
+  - ✅ TypeScript check passes (exit code 0)
+
+## Completed
+
+- **Implemented AI Sidebar Shell (2026-07-20):**
+  - ✅ Extracted AI sidebar into `components/editor/ai-sidebar.tsx`
+  - ✅ Added header with title "AI Workspace", subtitle, bot icon, and close button
+  - ✅ Implemented tabbed layout (AI Architect, Specs) with accent styling
+  - ✅ Built AI Architect tab with empty state, starter chips, and auto-resizing textarea
+  - ✅ Built Specs tab with "Generate Spec" button and demo spec card
+  - ✅ Integrated `AISidebar` into `EditorWorkspaceClient`, replacing placeholder
+  - ✅ Uses existing project color tokens (`bg-surface`, `text-primary`, etc.)
+  - ✅ `npm run build` passes (verified via tsc --noEmit)
+
 ## In Progress
 
 - **AI Generation Integration (2026-07-??):**
@@ -160,6 +197,7 @@ Update this file whenever the current phase, active feature, or implementation s
 - Sidebar starts at `top-14`, fills the remaining viewport height, and removes floating margins/radius/shadows
 - Main editor content shifts by the sidebar width (`lg:ml-72`) when the desktop sidebar is open
 - Fixed sidebar header height to `h-14` to align with the navbar
+
 ## Open Questions
 
 - Add unresolved product or implementation questions here.

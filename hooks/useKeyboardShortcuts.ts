@@ -3,13 +3,15 @@
 import { useEffect, useRef } from "react";
 
 interface UseKeyboardShortcutsProps {
-  reactFlowInstance: any;
+  zoomIn: (options?: { duration?: number }) => void;
+  zoomOut: (options?: { duration?: number }) => void;
   undo: () => void;
   redo: () => void;
 }
 
 export function useKeyboardShortcuts({
-  reactFlowInstance,
+  zoomIn,
+  zoomOut,
   undo,
   redo,
 }: UseKeyboardShortcutsProps) {
@@ -33,10 +35,10 @@ export function useKeyboardShortcuts({
       // Handle zoom shortcuts
       if (event.key === '+' || event.key === '=') {
         event.preventDefault();
-        reactFlowInstance?.zoomIn({ duration: 200 });
+        zoomIn({ duration: 200 });
       } else if (event.key === '-') {
         event.preventDefault();
-        reactFlowInstance?.zoomOut({ duration: 200 });
+        zoomOut({ duration: 200 });
       } else if ((event.metaKey || event.ctrlKey) && event.key === 'z') {
         event.preventDefault();
         if (event.shiftKey) {
@@ -60,7 +62,7 @@ export function useKeyboardShortcuts({
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [reactFlowInstance, undo, redo]);
+  }, [zoomIn, zoomOut, undo, redo]);
 
   return {};
 }

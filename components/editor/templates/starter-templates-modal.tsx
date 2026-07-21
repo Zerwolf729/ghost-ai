@@ -108,9 +108,9 @@ function TemplatePreview({ template }: { template: CanvasTemplate }) {
   const xs = template.nodes.map((n) => n.position.x);
   const ys = template.nodes.map((n) => n.position.y);
   const minX = Math.min(...xs);
-  const maxX = Math.max(...xs) + (template.nodes[0]?.style?.width || 120);
+  const maxX = Math.max(...xs) + Number(template.nodes[0]?.style?.width || 120);
   const minY = Math.min(...ys);
-  const maxY = Math.max(...ys) + (template.nodes[0]?.style?.height || 60);
+  const maxY = Math.max(...ys) + Number(template.nodes[0]?.style?.height || 60);
   const padding = 20;
   const scaleX = (width - padding * 2) / Math.max(maxX - minX, 1);
   const scaleY = (height - padding * 2) / Math.max(maxY - minY, 1);
@@ -128,10 +128,10 @@ function TemplatePreview({ template }: { template: CanvasTemplate }) {
         const src = template.nodes.find((n) => n.id === e.source);
         const tgt = template.nodes.find((n) => n.id === e.target);
         if (!src || !tgt) return null;
-        const sx = src.position.x + ((src.style?.width || 120) / 2);
-        const sy = src.position.y + ((src.style?.height || 60) / 2);
-        const tx = tgt.position.x + ((tgt.style?.width || 120) / 2);
-        const ty = tgt.position.y + ((tgt.style?.height || 60) / 2);
+        const sx = src.position.x + (Number(src.style?.width || 120) / 2);
+        const sy = src.position.y + (Number(src.style?.height || 60) / 2);
+        const tx = tgt.position.x + (Number(tgt.style?.width || 120) / 2);
+        const ty = tgt.position.y + (Number(tgt.style?.height || 60) / 2);
         return (
           <line
             key={e.id}
@@ -147,8 +147,8 @@ function TemplatePreview({ template }: { template: CanvasTemplate }) {
       {template.nodes.map((n) => {
         const x = n.position.x * scale + offsetX;
         const y = n.position.y * scale + offsetY;
-        const w = (n.style?.width || 120) * scale;
-        const h = (n.style?.height || 60) * scale;
+        const w = Number(n.style?.width || 120) * scale;
+        const h = Number(n.style?.height || 60) * scale;
         return (
           <rect
             key={n.id}
@@ -156,8 +156,8 @@ function TemplatePreview({ template }: { template: CanvasTemplate }) {
             y={y}
             width={w}
             height={h}
-            fill={n.data.color}
-            stroke={n.data.color === "#111114" ? "#2a2a30" : n.data.color}
+            fill={n.data.fill}
+            stroke={n.data.fill === "#111114" ? "#2a2a30" : n.data.fill}
             strokeWidth={0.5}
             rx={2}
           />

@@ -22,6 +22,7 @@
     "@prisma/extension-accelerate": "^3.0.1",
     "@radix-ui/react-avatar": "^1.2.1",
     "@radix-ui/react-toast": "^1.2.18",
+    "@vercel/blob": "^2.6.1",
     "@xyflow/react": "^12.11.1",
     "class-variance-authority": "^0.7.1",
     "dotenv": "^17.4.2",
