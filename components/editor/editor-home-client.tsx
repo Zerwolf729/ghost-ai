@@ -6,8 +6,13 @@ import { CreateProjectDialog } from "./projects/create-project-dialog";
 import { RenameProjectDialog } from "./projects/rename-project-dialog";
 import { DeleteProjectDialog } from "./projects/delete-project-dialog";
 import { ProjectDialogsProvider, useProjectDialogsContext } from "./projects/project-dialogs-provider";
+import { EditorNavbar } from "./editor-navbar";
 import { cn } from "@/lib/utils";
+import { UserButton } from "@clerk/nextjs";
 import { useSidebar } from "./sidebar-context";
+import { AISidebar } from "./ai/ai-sidebar";
+import { AIStatusProvider } from "./ai/ai-status-context";
+import { LocalChatProvider } from "./ai/chat-context";
 import type { ProjectRow } from "@/lib/projects";
 
 interface EditorHomeClientProps {
@@ -30,7 +35,7 @@ export function EditorHomeClient({
 }
 
 function EditorHomeContent() {
-  const { isLeftOpen: sidebarOpen, closeLeft: closeSidebar } = useSidebar();
+  const { isLeftOpen: sidebarOpen, toggleLeft: toggleSidebar, closeLeft: closeSidebar, isRightOpen: rightSidebarOpen, toggleRight: toggleRightSidebar } = useSidebar();
   const {
     ownedProjects,
     sharedProjects,
@@ -52,7 +57,15 @@ function EditorHomeContent() {
   } = useProjectDialogsContext();
 
   return (
-    <>
+    <LocalChatProvider>
+      <AIStatusProvider>
+        <EditorNavbar
+          leftSidebarOpen={sidebarOpen}
+          onToggleLeftSidebar={toggleSidebar}
+          rightSidebarOpen={rightSidebarOpen}
+          onToggleRightSidebar={toggleRightSidebar}
+          isWorkspace={false}
+        />
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-20 bg-bg-base/70 backdrop-blur-sm md:hidden"
@@ -72,7 +85,7 @@ function EditorHomeContent() {
       />
 
       <main
-        className="relative h-[calc(100vh-56px)] w-screen overflow-hidden pt-14"
+        className="absolute top-14 left-0 right-0 bottom-0 overflow-hidden"
       >
         <div className="flex items-center justify-center h-full w-full px-4">
           <div className="flex flex-col items-center text-center space-y-6 max-w-xl w-full">
@@ -108,6 +121,9 @@ function EditorHomeContent() {
         </div>
       </main>
 
+      {/* Right sidebar - AI chat */}
+      <AISidebar isOpen={rightSidebarOpen} onClose={toggleRightSidebar} roomId={undefined} projectId={undefined} />
+
       <CreateProjectDialog
         open={isCreateOpen}
         onOpenChange={(open) => !open && closeDialog()}
@@ -133,6 +149,7 @@ function EditorHomeContent() {
         isLoading={isLoading}
         onDelete={handleDeleteProject}
       />
-    </>
+      </AIStatusProvider>
+    </LocalChatProvider>
   );
 }

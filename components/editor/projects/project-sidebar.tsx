@@ -50,7 +50,7 @@ export function ProjectSidebar({
 
       <aside
         className={cn(
-          "fixed bottom-0 left-0 top-0 z-50 flex w-64 flex-col border-r border-border-default bg-bg-surface transition-transform duration-200",
+          "fixed bottom-0 left-0 top-0 z-50 flex w-64 flex-col border-r border-border-default bg-bg-surface transition-transform duration-200 overflow-hidden",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
@@ -59,84 +59,84 @@ export function ProjectSidebar({
           <button
             type="button"
             className="rounded-md p-1 hover:bg-subtle flex items-center"
-            onClick={() => { console.log('X button clicked'); onClose(); }}
+            onClick={() => onClose()}
           >
             <X className="h-4 w-4" />
             <span className="sr-only">Close sidebar</span>
           </button>
         </div>
 
-        <div className="flex flex-1 flex-col overflow-hidden p-3">
-          <Tabs key={`${activeProjectId ?? "home"}-${initialTab}`} className="flex flex-1 flex-col">
-            <TabsList className="w-full bg-bg-subtle rounded-lg p-0.5">
-              <TabsTrigger
-                value="my-projects"
-                className={cn(
-                  "flex-1 rounded-md text-xs py-1.5 transition-all",
-                  activeTab === "my-projects"
-                    ? "bg-bg-surface text-text-primary shadow-sm"
-                    : "text-text-muted hover:text-text-secondary"
-                )}
-                onClick={() => setActiveTab("my-projects")}
-              >
-                My Projects
-              </TabsTrigger>
-              <TabsTrigger
-                value="shared"
-                className={cn(
-                  "flex-1 rounded-md text-xs py-1.5 transition-all",
-                  activeTab === "shared"
-                    ? "bg-bg-surface text-text-primary shadow-sm"
-                    : "text-text-muted hover:text-text-secondary"
-                )}
-                onClick={() => setActiveTab("shared")}
-              >
-                Shared
-              </TabsTrigger>
-            </TabsList>
+        <div className="shrink-0 p-3 border-b border-border-default">
+          <div className="w-full bg-bg-subtle rounded-lg p-0.5 flex">
+            <button
+              type="button"
+              className={cn(
+                "flex-1 rounded-md text-xs py-1.5 transition-all",
+                activeTab === "my-projects"
+                  ? "bg-bg-surface text-text-primary shadow-sm"
+                  : "text-text-muted hover:text-text-secondary"
+              )}
+              onClick={() => setActiveTab("my-projects")}
+            >
+              My Projects
+            </button>
+            <button
+              type="button"
+              className={cn(
+                "flex-1 rounded-md text-xs py-1.5 transition-all",
+                activeTab === "shared"
+                  ? "bg-bg-surface text-text-primary shadow-sm"
+                  : "text-text-muted hover:text-text-secondary"
+              )}
+              onClick={() => setActiveTab("shared")}
+            >
+              Shared
+            </button>
+          </div>
+        </div>
 
-            {activeTab === "my-projects" ? (
-              <div className="flex-1 overflow-y-auto mt-2">
-                {ownedProjects.length === 0 ? (
-                  <div className="flex items-center justify-center h-full">
-                    <p className="text-sm text-text-muted">No projects yet.</p>
-                  </div>
-                ) : (
-                  <ul className="flex flex-col gap-0.5">
-                    {ownedProjects.map((project) => (
-                      <li key={project.id}>
-                        <ProjectItem
-                          project={project}
-                          active={project.id === activeProjectId}
-                          onRename={onRename}
-                          onDelete={onDelete}
-                        />
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            ) : (
-              <div className="flex-1 overflow-y-auto mt-2">
-                {sharedProjects.length === 0 ? (
-                  <div className="flex items-center justify-center h-full">
-                    <p className="text-sm text-text-muted">No shared projects.</p>
-                  </div>
-                ) : (
-                  <ul className="flex flex-col gap-0.5">
-                    {sharedProjects.map((project) => (
-                      <li key={project.id}>
-                        <ProjectItem
-                          project={project}
-                          active={project.id === activeProjectId}
-                        />
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            )}
-          </Tabs>
+        <div className="flex-1 overflow-y-auto min-h-0">
+          {activeTab === "my-projects" ? (
+            <div className="p-3">
+              {ownedProjects.length === 0 ? (
+                <div className="flex items-center justify-center h-32">
+                  <p className="text-sm text-text-muted">No projects yet.</p>
+                </div>
+              ) : (
+                <ul className="flex flex-col gap-0.5">
+                  {ownedProjects.map((project) => (
+                    <li key={project.id}>
+                      <ProjectItem
+                        project={project}
+                        active={project.id === activeProjectId}
+                        onRename={onRename}
+                        onDelete={onDelete}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ) : (
+            <div className="p-3">
+              {sharedProjects.length === 0 ? (
+                <div className="flex items-center justify-center h-32">
+                  <p className="text-sm text-text-muted">No shared projects.</p>
+                </div>
+              ) : (
+                <ul className="flex flex-col gap-0.5">
+                  {sharedProjects.map((project) => (
+                    <li key={project.id}>
+                      <ProjectItem
+                        project={project}
+                        active={project.id === activeProjectId}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
         </div>
 
         {onNewProject && (

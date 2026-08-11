@@ -13,12 +13,14 @@ export function ControlBar({ canUndo, canRedo, onUndo, onRedo }: ControlBarProps
   const { zoomIn, zoomOut, fitView } = useReactFlow();
 
   return (
-    <div className="absolute bottom-20 left-1/2 -translate-x-[400px] z-20 flex items-center gap-3 rounded-full bg-[#111114] border border-[#2a2a30] px-3 py-2 shadow-lg">
+    <div
+      className="absolute bottom-20 left-75 z-20 flex items-center gap-3 rounded-full bg-bg-surface border border-border-default px-3 py-2 shadow-lg"
+    >
       {/* Zoom controls group */}
       <div className="flex items-center gap-1">
         <button
           onClick={() => zoomOut({ duration: 200 })}
-          className="w-8 h-8 rounded-full bg-[#1e1e23] hover:bg-[#2a2a30] text-[#f0f0f4] flex items-center justify-center transition-colors"
+          className="w-8 h-8 rounded-full bg-bg-subtle hover:bg-border-default text-text-primary flex items-center justify-center transition-colors"
           title="Zoom out"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -28,7 +30,7 @@ export function ControlBar({ canUndo, canRedo, onUndo, onRedo }: ControlBarProps
 
         <button
           onClick={() => fitView({ duration: 200, maxZoom: 1.5 })}
-          className="w-8 h-8 rounded-full bg-[#1e1e23] hover:bg-[#2a2a30] text-[#f0f0f4] flex items-center justify-center transition-colors"
+          className="w-8 h-8 rounded-full bg-bg-subtle hover:bg-border-default text-text-primary flex items-center justify-center transition-colors"
           title="Fit view"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -38,7 +40,7 @@ export function ControlBar({ canUndo, canRedo, onUndo, onRedo }: ControlBarProps
 
         <button
           onClick={() => zoomIn({ duration: 200 })}
-          className="w-8 h-8 rounded-full bg-[#1e1e23] hover:bg-[#2a2a30] text-[#f0f0f4] flex items-center justify-center transition-colors"
+          className="w-8 h-8 rounded-full bg-bg-subtle hover:bg-border-default text-text-primary flex items-center justify-center transition-colors"
           title="Zoom in"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -48,14 +50,14 @@ export function ControlBar({ canUndo, canRedo, onUndo, onRedo }: ControlBarProps
       </div>
 
       {/* Divider */}
-      <div className="w-px h-8 bg-[#2a2a30]" />
+      <div className="w-px h-8 bg-border-default" />
 
       {/* History controls group */}
       <div className="flex items-center gap-1">
         <button
           onClick={onUndo}
           disabled={!canUndo}
-          className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${canUndo ? 'bg-[#1e1e23] hover:bg-[#2a2a30] text-[#f0f0f4] cursor-pointer' : 'bg-[#1e1e23]/50 text-[#505060] cursor-not-allowed opacity-50'}`}
+          className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${canUndo ? 'bg-bg-subtle hover:bg-border-default text-text-primary cursor-pointer' : 'bg-bg-subtle/50 text-text-faint cursor-not-allowed opacity-50'}`}
           title="Undo"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -66,7 +68,7 @@ export function ControlBar({ canUndo, canRedo, onUndo, onRedo }: ControlBarProps
         <button
           onClick={onRedo}
           disabled={!canRedo}
-          className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${canRedo ? 'bg-[#1e1e23] hover:bg-[#2a2a30] text-[#f0f0f4] cursor-pointer' : 'bg-[#1e1e23]/50 text-[#505060] cursor-not-allowed opacity-50'}`}
+          className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${canRedo ? 'bg-bg-subtle hover:bg-border-default text-text-primary cursor-pointer' : 'bg-bg-subtle/50 text-text-faint cursor-not-allowed opacity-50'}`}
           title="Redo"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">

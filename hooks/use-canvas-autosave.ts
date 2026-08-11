@@ -30,30 +30,45 @@ export function useCanvasAutosave({
   const savingRef = useRef(false);
 
   // Watch storage — use broad selector to detect any change, then access LiveMap inside
-  const storage = useStorage((root) => root) as any;
+  const storage = useStorage((root) => root) as unknown as {
+    flow?: {
+      nodes?: { toObject?: () => Record<string, unknown>; forEach?: (cb: (node: unknown, key: string) => void) => void };
+      edges?: { toObject?: () => Record<string, unknown>; forEach?: (cb: (edge: unknown, key: string) => void) => void };
+    };
+  };
 
   // Create stable snapshot keys that change when storage content changes
-  const storageFingerprint = storage?.flow
-    ? JSON.stringify({
-        nodes: storage.flow.nodes.toObject(),
-        edges: storage.flow.edges.toObject(),
-      })
-    : null;
+  // Guard: nodes/edges may not be LiveMap on fresh project (no toObject)
+  const storageFingerprint =
+    storage?.flow &&
+    typeof (storage.flow as { nodes?: { toObject?: () => unknown } }).nodes?.toObject === "function" &&
+    typeof (storage.flow as { edges?: { toObject?: () => unknown } }).edges?.toObject === "function"
+      ? JSON.stringify({
+          nodes: (storage.flow as { nodes: { toObject: () => Record<string, unknown> } }).nodes.toObject(),
+          edges: (storage.flow as { edges: { toObject: () => Record<string, unknown> } }).edges.toObject(),
+        })
+      : null;
 
   const serialize = useCallback(() => {
     const nodesObj: Record<string, unknown> = {};
     const edgesObj: Record<string, unknown> = {};
 
     if (storage?.flow) {
-      const nodesMap = storage.flow.nodes;
-      nodesMap.forEach((node: any, key: string) => {
-        nodesObj[key] = node.toImmutable?.() ?? { ...node };
-      });
+      const nodesMap = (storage.flow as { nodes?: { forEach?: (cb: (node: unknown, key: string) => void) => void } }).nodes;
+      if (typeof nodesMap?.forEach === "function") {
+        nodesMap.forEach((node: unknown, key: string) => {
+          const n = node as { toImmutable?: () => unknown };
+          nodesObj[key] = n.toImmutable?.() ?? { ...(node as Record<string, unknown>) };
+        });
+      }
 
-      const edgesMap = storage.flow.edges;
-      edgesMap.forEach((edge: any, key: string) => {
-        edgesObj[key] = edge.toImmutable?.() ?? { ...(edge) };
-      });
+      const edgesMap = (storage.flow as { edges?: { forEach?: (cb: (edge: unknown, key: string) => void) => void } }).edges;
+      if (typeof edgesMap?.forEach === "function") {
+        edgesMap.forEach((edge: unknown, key: string) => {
+          const e = edge as { toImmutable?: () => unknown };
+          edgesObj[key] = e.toImmutable?.() ?? { ...(edge as Record<string, unknown>) };
+        });
+      }
     }
 
     return { nodes: nodesObj, edges: edgesObj };
@@ -100,6 +115,11 @@ export function useCanvasAutosave({
     if (!enabled) return;
     if (!storageFingerprint) return;
 
+    const snapshot = serialize();
+    const hasContent =
+      Object.keys(snapshot.nodes).length > 0 || Object.keys(snapshot.edges).length > 0;
+    if (!hasContent) return;
+
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
       persist();
@@ -108,8 +128,7 @@ export function useCanvasAutosave({
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [storageFingerprint, debounceMs, enabled, persist]);
+  }, [storageFingerprint, debounceMs, enabled, persist, serialize]);
 
   const saveNow = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);

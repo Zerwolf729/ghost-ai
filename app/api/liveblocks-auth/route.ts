@@ -24,16 +24,21 @@ export async function POST(request: NextRequest) {
   }
 
   // Identify user
-  const name = `${user.firstName || ""} ${user.lastName || ""}`.trim() || "Anonymous";
+  const displayName =
+    `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
+    user.username ||
+    user.emailAddresses?.[0]?.emailAddress ||
+    "User";
   const avatar = user.imageUrl || "";
   const cursorColor = getCursorColor(userId);
 
   // Prepare session
   const session = liveblocks.prepareSession(userId, {
     userInfo: {
-      name,
+      id: userId,
+      name: displayName,
       avatar,
-      cursorColor,
+      color: cursorColor,
     },
   });
 

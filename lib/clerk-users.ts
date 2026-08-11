@@ -4,12 +4,22 @@
  */
 import { clerkClient } from '@clerk/nextjs/server';
 
+interface ClerkEmailAddress {
+  id: string;
+  emailAddress: string;
+}
+
+interface ClerkUser {
+  emailAddresses: ClerkEmailAddress[];
+  primaryEmailAddressId?: string;
+}
+
 /**
  * Extract primary email from Clerk user object.
  */
-export function getPrimaryEmail(user: any): string | null {
+export function getPrimaryEmail(user: ClerkUser | null): string | null {
   if (!user?.emailAddresses?.length) return null;
-  const primary = user.emailAddresses.find((e: any) => e.id === user.primaryEmailAddressId);
+  const primary = user.emailAddresses.find((e) => e.id === user.primaryEmailAddressId);
   return primary?.emailAddress || user.emailAddresses[0]?.emailAddress || null;
 }
 

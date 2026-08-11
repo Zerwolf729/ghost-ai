@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { put, get, head, del } from "@vercel/blob";
 import { prisma } from "@/lib/prisma";
+import { checkProjectAccess } from "@/lib/project-access";
 
 export async function PUT(
   request: NextRequest,
@@ -77,8 +78,8 @@ export async function GET(
     }
 
     // Check access: owner or collaborator
-    if (project.ownerId !== userId) {
-      // TODO: also check project collaborators table
+    const hasAccess = await checkProjectAccess(projectId);
+    if (!hasAccess) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

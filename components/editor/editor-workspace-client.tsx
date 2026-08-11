@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "./sidebar-context";
 import { EditorNavbar } from "./editor-navbar";
@@ -9,7 +9,10 @@ import { ProjectShareDialog } from "./projects/project-share-dialog";
 import { BaseCanvas } from "./canvas/canvas-editor";
 import { StarterTemplatesModal } from "./templates/starter-templates-modal";
 import { AISidebar } from "./ai/ai-sidebar";
+import { AIStatusProvider } from "./ai/ai-status-context";
 import { CanvasTemplate } from "./templates/starter-templates";
+import { LiveblocksRoomWrapper } from "./canvas/liveblocks-canvas-wrapper";
+import { LiveblocksChatProvider } from "./ai/chat-context";
 import type { ProjectRow } from "@/lib/projects";
 
 interface EditorWorkspaceClientProps {
@@ -40,6 +43,7 @@ export function EditorWorkspaceClient({
   const [importTemplate, setImportTemplate] = useState<CanvasTemplate | null>(null);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const saveNowRef = useRef<(() => void) | null>(null);
+  const canvasStateRef = useRef<{ nodes: unknown[]; edges: unknown[] }>({ nodes: [], edges: [] });
 
   const handleSaveNow = useCallback(() => {
     saveNowRef.current?.();
@@ -56,79 +60,86 @@ export function EditorWorkspaceClient({
   }, []);
 
   return (
-    <>
-      {/* Navbar - fixed top */}
-      <EditorNavbar
-        leftSidebarOpen={leftSidebarOpen}
-        onToggleLeftSidebar={toggleLeftSidebar}
-        rightSidebarOpen={rightSidebarOpen}
-        onToggleRightSidebar={toggleRightSidebar}
-        projectName={projectName}
-        onOpenShare={() => setShareDialogOpen(true)}
-        onOpenStarterTemplates={() => setTemplateModalOpen(true)}
-        isOwner={isOwner}
-        saveStatus={saveStatus}
-        onSaveNow={handleSaveNow}
-        isWorkspace
-      />
-
-      <div className="relative h-screen w-screen overflow-hidden pt-14">
-        {/* Canvas - full width, flush with background */}
-        <main className="relative h-full w-full overflow-hidden">
-          <BaseCanvas
-            roomId={projectId}
-            importTemplate={importTemplate}
-            clearImportTemplate={handleClearTemplate}
-            projectId={projectId}
-            onSaveStatusChange={setSaveStatus}
-            onSaveNowRef={(fn) => (saveNowRef.current = fn)}
-          />
-        </main>
-
-        {/* Left sidebar - overlay panel */}
-        <aside
-          className={cn(
-            "fixed left-0 top-14 z-30 h-[calc(100vh-56px)] w-64 border-r border-border-default bg-bg-surface/95 backdrop-blur-xl shadow-lg overflow-hidden transition-all duration-300",
-            leftSidebarOpen ? "translate-x-0" : "-translate-x-full"
-          )}
-        >
-          <ProjectSidebar
-            isOpen={leftSidebarOpen}
-            onClose={toggleLeftSidebar}
-            ownedProjects={initialOwnedProjects}
-            sharedProjects={initialSharedProjects}
-            activeProjectId={projectId}
-          />
-        </aside>
-
-        {/* Right sidebar - AI chat */}
-        <AISidebar isOpen={rightSidebarOpen} onClose={toggleRightSidebar} />
-      </div>
-
-      {/* Mobile backdrop */}
-      {leftSidebarOpen && (
-        <div
-          className="fixed inset-0 z-20 bg-bg-base/70 backdrop-blur-sm md:hidden"
-          onClick={toggleLeftSidebar}
-          aria-hidden="true"
+    <LiveblocksRoomWrapper roomId={projectId}>
+      <LiveblocksChatProvider>
+      <AIStatusProvider>
+        {/* Navbar - fixed top */}
+        <EditorNavbar
+          leftSidebarOpen={leftSidebarOpen}
+          onToggleLeftSidebar={toggleLeftSidebar}
+          rightSidebarOpen={rightSidebarOpen}
+          onToggleRightSidebar={toggleRightSidebar}
+          projectName={projectName}
+          onOpenShare={() => setShareDialogOpen(true)}
+          onOpenStarterTemplates={() => setTemplateModalOpen(true)}
+          isOwner={isOwner}
+          saveStatus={saveStatus}
+          onSaveNow={handleSaveNow}
+          isWorkspace
         />
-      )}
 
-      {/* Share dialog */}
-      <ProjectShareDialog
-        projectId={projectId}
-        projectName={projectName}
-        open={shareDialogOpen}
-        onOpenChange={setShareDialogOpen}
-        isOwner={isOwner}
-      />
+        <div className="relative h-screen w-screen overflow-hidden">
+          {/* Canvas - full width, flush with background. */}
+          <main className="absolute top-14 left-0 right-0 bottom-0 overflow-hidden">
+            <BaseCanvas
+              roomId={projectId}
+              importTemplate={importTemplate}
+              clearImportTemplate={handleClearTemplate}
+              projectId={projectId}
+              onSaveStatusChange={setSaveStatus}
+              onSaveNowRef={(fn) => (saveNowRef.current = fn)}
+              onCanvasChange={(nodes, edges) => {
+                canvasStateRef.current = { nodes, edges };
+              }}
+            />
+          </main>
 
-      {/* Starter Templates modal */}
-      <StarterTemplatesModal
-        open={templateModalOpen}
-        onOpenChange={setTemplateModalOpen}
-        onImport={handleImportTemplate}
-      />
-    </>
+          {/* Left sidebar - overlay panel, fixed to top-14 to clear navbar */}
+          <aside
+            className={cn(
+              "fixed left-0 top-14 z-30 h-[calc(100vh-56px)] w-64 border-r border-border-default bg-bg-surface/95 backdrop-blur-xl shadow-lg overflow-hidden transition-all duration-300",
+              leftSidebarOpen ? "translate-x-0" : "-translate-x-full"
+            )}
+          >
+            <ProjectSidebar
+              isOpen={leftSidebarOpen}
+              onClose={toggleLeftSidebar}
+              ownedProjects={initialOwnedProjects}
+              sharedProjects={initialSharedProjects}
+              activeProjectId={projectId}
+            />
+          </aside>
+
+          {/* Right sidebar - AI chat */}
+          <AISidebar isOpen={rightSidebarOpen} onClose={toggleRightSidebar} roomId={projectId} projectId={projectId} canvasStateRef={canvasStateRef} />
+        </div>
+
+        {/* Mobile backdrop */}
+        {leftSidebarOpen && (
+          <div
+            className="fixed inset-0 z-20 bg-bg-base/70 backdrop-blur-sm md:hidden"
+            onClick={toggleLeftSidebar}
+            aria-hidden="true"
+          />
+        )}
+
+        {/* Share dialog */}
+        <ProjectShareDialog
+          projectId={projectId}
+          projectName={projectName}
+          open={shareDialogOpen}
+          onOpenChange={setShareDialogOpen}
+          isOwner={isOwner}
+        />
+
+        {/* Starter Templates modal */}
+        <StarterTemplatesModal
+          open={templateModalOpen}
+          onOpenChange={setTemplateModalOpen}
+          onImport={handleImportTemplate}
+        />
+      </AIStatusProvider>
+      </LiveblocksChatProvider>
+    </LiveblocksRoomWrapper>
   );
 }

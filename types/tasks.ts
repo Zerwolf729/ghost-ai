@@ -3,7 +3,12 @@
  * Validated before display to ensure correct UI state transitions.
  */
 
-export const AI_STATUS_VALUES = ["started", "completed", "failed"] as const;
+export const AI_STATUS_VALUES = [
+  "started",
+  "processing",
+  "completed",
+  "failed",
+] as const;
 
 export type AIStatus = (typeof AI_STATUS_VALUES)[number];
 
@@ -37,4 +42,25 @@ export function validateAIStatusFeedPayload(
   if (candidate.text !== undefined && typeof candidate.text !== "string")
     return false;
   return true;
+}
+
+// ---- Chat message types (ai-chat feed) ----
+
+export interface ChatMessage {
+  id: string;
+  sender: string;
+  content: string;
+  timestamp: number;
+}
+
+export function validateChatMessage(data: unknown): data is ChatMessage {
+  if (!data || typeof data !== "object") return false;
+  const m = data as Record<string, unknown>;
+  return (
+    typeof m.id === "string" &&
+    typeof m.sender === "string" &&
+    typeof m.content === "string" &&
+    typeof m.timestamp === "number" &&
+    m.content.trim().length > 0
+  );
 }

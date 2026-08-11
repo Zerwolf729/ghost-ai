@@ -5,13 +5,13 @@ import { NODE_COLOR_PALETTE } from "@/types/canvas";
 export function ColorToolbar({ onColorSelect, activeColor, onMouseDown }: { onColorSelect: (bg: string, text: string) => void, activeColor: string, onMouseDown?: (e: React.MouseEvent) => void }) {
   return (
     <div
-      className="absolute -top-12 left-1/2 -translate-x-1/2 z-20 flex gap-1 p-1 bg-[#111114] border border-[#2a2a30] rounded-full shadow-lg"
+      className="absolute -top-12 left-1/2 -translate-x-1/2 z-20 flex gap-1 p-1 bg-bg-surface border border-border-default rounded-full shadow-lg"
       onMouseDown={onMouseDown}
     >
       {NODE_COLOR_PALETTE.map(({ bg, text }) => (
         <button
           key={bg}
-          className={`w-6 h-6 rounded-full border border-[#2a2a30] transition-all duration-200 hover:scale-110 hover:shadow-md ${activeColor === bg ? 'ring-2 ring-offset-2 ring-[#00c8d4] scale-105' : ''}`}
+          className={`w-6 h-6 rounded-full border border-border-default transition-all duration-200 hover:scale-110 hover:shadow-md ${activeColor === bg ? 'ring-2 ring-offset-2 ring-accent-primary scale-105' : ''}`}
           style={{
             backgroundColor: bg,
             boxShadow: activeColor === bg ? `0 0 8px ${text}40` : 'none'

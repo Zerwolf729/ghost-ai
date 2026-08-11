@@ -1,14 +1,21 @@
-"use client";
+"use client"
 
-import { useRef } from "react";
-import { useOthers } from "@liveblocks/react";
-import { useReactFlow, useViewport } from "@xyflow/react";
+import { useRef, useState, useEffect, useMemo } from "react"
+import { useOthers } from "@liveblocks/react"
+import { useReactFlow, useViewport } from "@xyflow/react"
+import { Loader2 } from "lucide-react"
 
 export function PresenceCursors() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const others = useOthers();
-  const { flowToScreenPosition } = useReactFlow();
-  useViewport();
+  const containerRef = useRef<HTMLDivElement>(null)
+  const others = useOthers()
+  const { flowToScreenPosition } = useReactFlow()
+  useViewport()
+
+  // Use state for rect to trigger re-render
+  const [rect, setRect] = useState<DOMRect | null>(null)
+  useEffect(() => {
+    if (containerRef.current) setRect(containerRef.current.getBoundingClientRect())
+  }, [others])
 
   return (
     <div
@@ -16,15 +23,14 @@ export function PresenceCursors() {
       className="pointer-events-none absolute inset-0 overflow-hidden"
     >
       {others.map((other) => {
-        const cursor = other.presence.cursor;
-        if (!cursor || !containerRef.current) return null;
+        const cursor = other.presence.cursor
+        if (!cursor || !rect) return null
 
-        const rect = containerRef.current.getBoundingClientRect();
-        const screen = flowToScreenPosition(cursor);
-        const x = screen.x - rect.left;
-        const y = screen.y - rect.top;
-        const color = other.info?.cursorColor ?? "#888888";
-        const name = other.info?.name ?? "Anonymous";
+        const screen = flowToScreenPosition(cursor)
+        const x = screen.x - rect.left
+        const y = screen.y - rect.top
+        const color = other.info?.color ?? "#888888"
+        const name = other.info?.name ?? "Anonymous"
 
         return (
           <div
@@ -51,14 +57,14 @@ export function PresenceCursors() {
               className="mt-0.5 flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium text-white"
               style={{ background: color, whiteSpace: "nowrap" }}
             >
-              {other.presence.isThinking && (
-                <span className="inline-block h-2 w-2 animate-ping rounded-full bg-white/80" />
+              {other.presence.thinking && (
+                <Loader2 className="h-2.5 w-2.5 animate-spin" />
               )}
               {name}
             </div>
           </div>
-        );
+        )
       })}
     </div>
-  );
+  )
 }

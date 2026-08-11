@@ -1,12 +1,12 @@
 // Define Liveblocks types for your application
 // https://liveblocks.io/docs/api-reference/liveblocks-react#Typing-your-data
-import { LiveMap, LiveObject } from "@liveblocks/client";
+import { LiveMap, LiveObject, type Json } from "@liveblocks/client";
 
 declare global {
   interface Liveblocks {
     Presence: {
       cursor: { x: number; y: number } | null;
-      isThinking: boolean;
+      thinking: boolean;
     };
 
     // This is defensively typed for the camera. The runtime
@@ -35,15 +35,19 @@ declare global {
     UserMeta: {
       id: string;
       info: {
+        id: string;
         name: string;
         avatar: string;
-        cursorColor: string;
+        color: string;
       };
     };
 
-    RoomEvent: {};
-    ThreadMetadata: {};
-    RoomInfo: {};
+    RoomEvent: {
+      type: string;
+      [key: string]: Json;
+    };
+    ThreadMetadata: Record<string, never>;
+    RoomInfo: Record<string, never>;
   }
 }
 

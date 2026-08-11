@@ -7,12 +7,75 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Check, Copy, Loader2, Trash2, UserPlus } from "lucide-react";
 
-interface Collaborator {
+// ── types ──────────────────────────────────────────────────────────────
+
+interface CollaboratorEntry {
   email: string;
-  name?: string;
-  avatarUrl?: string | null;
-  isOwner?: boolean;
+  name: string;
+  avatarUrl: string | null;
+  joinedAt?: string;
 }
+
+interface OwnerEntry {
+  email: string;
+  name: string;
+  avatarUrl: string | null;
+}
+
+interface CollaboratorsApiResponse {
+  collaborators: CollaboratorEntry[];
+  owner: OwnerEntry | null;
+  isOwner: boolean;
+}
+
+interface ApiErrorResponse {
+  error: string;
+}
+
+// ── helpers ────────────────────────────────────────────────────────────
+
+function getInitials(name: string): string {
+  return name
+    .split(" ")
+    .map((s) => s[0]?.toUpperCase())
+    .filter(Boolean)
+    .join("")
+    .slice(0, 2) || "?";
+}
+
+// ── user card ──────────────────────────────────────────────────────────
+
+function UserCard({
+  name,
+  email,
+  avatarUrl,
+  rightAction,
+}: {
+  name: string;
+  email: string;
+  avatarUrl: string | null;
+  rightAction?: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-center gap-3 rounded-xl bg-bg-subtle px-3 py-2.5">
+      <Avatar className="h-8 w-8 shrink-0">
+        {avatarUrl && (
+          <AvatarImage src={avatarUrl} alt={name} />
+        )}
+        <AvatarFallback className="bg-accent-primary-dim text-accent-primary text-xs">
+          {getInitials(name)}
+        </AvatarFallback>
+      </Avatar>
+      <div className="grid gap-0.5 min-w-0 flex-1">
+        <p className="text-sm font-medium text-text-primary truncate">{name}</p>
+        <p className="text-xs text-text-muted truncate">{email}</p>
+      </div>
+      {rightAction}
+    </div>
+  );
+}
+
+// ── dialog ─────────────────────────────────────────────────────────────
 
 interface ProjectShareDialogProps {
   projectId: string;
@@ -22,11 +85,6 @@ interface ProjectShareDialogProps {
   isOwner: boolean;
 }
 
-/**
- * Share dialog for inviting/removing collaborators.
- * Owners: full access (invite, remove, copy link).
- * Collaborators: read-only view of collaborator list.
- */
 export function ProjectShareDialog({
   projectId,
   projectName,
@@ -35,33 +93,33 @@ export function ProjectShareDialog({
   isOwner,
 }: ProjectShareDialogProps) {
   const [email, setEmail] = useState("");
-  const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
-  const [owner, setOwner] = useState<{ email: string; name: string; avatarUrl?: string | null } | null>(null);
+  const [collaborators, setCollaborators] = useState<CollaboratorEntry[]>([]);
+  const [owner, setOwner] = useState<OwnerEntry | null>(null);
   const [loading, setLoading] = useState(true);
   const [inviting, setInviting] = useState(false);
   const [removing, setRemoving] = useState<string | null>(null);
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied">("idle");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [origin, setOrigin] = useState("");
+  const [origin] = useState(() =>
+    typeof window !== "undefined" ? window.location.origin : ""
+  );
 
-  useEffect(() => {
-    setOrigin(window.location.origin);
-  }, []);
-
-  // Fetch collaborators and owner
   const fetchCollaborators = async () => {
     try {
       setLoading(true);
       setError(null);
       const response = await fetch(`/api/projects/${projectId}/collaborators`);
-      if (!response.ok) throw new Error("Failed to fetch collaborators");
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({})) as ApiErrorResponse;
+        throw new Error(body.error || "Failed to fetch collaborators");
+      }
 
-      const data = await response.json();
+      const data: CollaboratorsApiResponse = await response.json();
       setCollaborators(data.collaborators || []);
       setOwner(data.owner || null);
-    } catch (err) {
-      setError("Failed to load collaborators");
+    } catch (err: unknown) {
+      setError(ErrorMessage(err));
       console.error("Fetch collaborators error:", err);
     } finally {
       setLoading(false);
@@ -69,12 +127,17 @@ export function ProjectShareDialog({
   };
 
   useEffect(() => {
-    if (open && projectId) {
-      fetchCollaborators();
+    if (!open || !projectId) return;
+
+    const runEffect = async () => {
+      await fetchCollaborators();
       setEmail("");
       setError(null);
       setSuccess(null);
-    }
+    };
+
+    void runEffect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, projectId]);
 
   const handleInvite = async () => {
@@ -91,13 +154,15 @@ export function ProjectShareDialog({
       });
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Failed to invite collaborator");
+      if (!response.ok) {
+        throw new Error("error" in data ? (data as ApiErrorResponse).error : "Failed to invite collaborator");
+      }
 
       setEmail("");
       setSuccess("Invited successfully");
       await fetchCollaborators();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(ErrorMessage(err));
     } finally {
       setInviting(false);
     }
@@ -117,12 +182,14 @@ export function ProjectShareDialog({
       });
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Failed to remove collaborator");
+      if (!response.ok) {
+        throw new Error("error" in data ? (data as ApiErrorResponse).error : "Failed to remove collaborator");
+      }
 
       setSuccess("Removed successfully");
       await fetchCollaborators();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(ErrorMessage(err));
     } finally {
       setRemoving(null);
     }
@@ -131,7 +198,7 @@ export function ProjectShareDialog({
   const handleCopyLink = () => {
     if (!origin) return;
     const projectUrl = `${origin}/editor/${projectId}`;
-    navigator.clipboard.writeText(projectUrl);
+    void navigator.clipboard.writeText(projectUrl);
     setCopyStatus("copied");
     setTimeout(() => setCopyStatus("idle"), 2000);
   };
@@ -139,7 +206,7 @@ export function ProjectShareDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg md:max-w-xl bg-bg-surface border-border-default p-6">
-        <DialogHeader>
+        <DialogHeader className="px-0 pt-0 pb-2">
           <DialogTitle className="text-text-primary text-lg">Share Project</DialogTitle>
           <DialogDescription className="text-text-secondary text-sm">
             Invite collaborators to {projectName}
@@ -214,20 +281,11 @@ export function ProjectShareDialog({
         {owner && (
           <div className="mt-5">
             <h3 className="text-sm font-medium text-text-secondary mb-2">Owner</h3>
-            <div className="flex items-center gap-3 rounded-xl bg-bg-subtle px-3 py-2.5">
-              <Avatar className="h-8 w-8 shrink-0">
-                {owner.avatarUrl && (
-                  <AvatarImage src={owner.avatarUrl} alt={owner.name} />
-                )}
-                <AvatarFallback className="bg-accent-primary-dim text-accent-primary text-xs">
-                  {owner.name.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-text-primary truncate">{owner.name}</p>
-                <p className="text-xs text-text-muted truncate">{owner.email}</p>
-              </div>
-            </div>
+            <UserCard
+              name={owner.name}
+              email={owner.email}
+              avatarUrl={owner.avatarUrl ?? null}
+            />
           </div>
         )}
 
@@ -247,41 +305,31 @@ export function ProjectShareDialog({
             </p>
           ) : (
             <ul className="space-y-3">
-              {collaborators.map((collab, index) => (
-                <li key={`${collab.email}-${index}`} className="flex items-center justify-between">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <Avatar className="h-8 w-8 shrink-0">
-                      {collab.avatarUrl && (
-                        <AvatarImage src={collab.avatarUrl} alt={collab.name || collab.email} />
-                      )}
-                      <AvatarFallback className="bg-accent-primary-dim text-accent-primary text-xs">
-                        {collab.name ? collab.name.charAt(0).toUpperCase() : collab.email.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="grid gap-0.5 min-w-0">
-                      <p className="text-sm font-medium text-text-primary truncate">
-                        {collab.name || collab.email}
-                        {collab.isOwner && <span className="text-xs text-text-faint"> (Owner)</span>}
-                      </p>
-                    </div>
-                  </div>
-
-                  {isOwner && !collab.isOwner && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleRemove(collab.email)}
-                      disabled={removing === collab.email}
-                      className="h-8 w-8 p-0 text-text-muted hover:text-state-error shrink-0"
-                    >
-                      {removing === collab.email ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Trash2 className="h-4 w-4" />
-                      )}
-                      <span className="sr-only">Remove {collab.email}</span>
-                    </Button>
-                  )}
+              {collaborators.map((c, index) => (
+                <li key={`${c.email}-${index}`}>
+                  <UserCard
+                    name={c.name}
+                    email={c.email}
+                    avatarUrl={c.avatarUrl}
+                    rightAction={
+                      isOwner ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemove(c.email)}
+                          disabled={removing === c.email}
+                          className="h-8 w-8 p-0 text-text-muted hover:text-state-error shrink-0"
+                        >
+                          {removing === c.email ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
+                          <span className="sr-only">Remove {c.email}</span>
+                        </Button>
+                      ) : undefined
+                    }
+                  />
                 </li>
               ))}
             </ul>
@@ -296,4 +344,13 @@ export function ProjectShareDialog({
       </DialogContent>
     </Dialog>
   );
+}
+
+// ── utils ──────────────────────────────────────────────────────────────
+
+/** Narrow an unknown error value to a user-facing message string. */
+function ErrorMessage(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  if (typeof err === "string") return err;
+  return "An unexpected error occurred";
 }
