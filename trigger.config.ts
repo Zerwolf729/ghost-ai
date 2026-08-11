@@ -26,7 +26,7 @@ export default defineConfig({
       DATABASE_URL: process.env.DATABASE_URL ?? "",
       LIVEBLOCKS_SECRET_KEY: process.env.LIVEBLOCKS_SECRET_KEY ?? "",
       LIVEBLOCKS_PUBLIC_KEY: process.env.LIVEBLOCKS_PUBLIC_KEY ?? "",
-      OPENROUTER_AI_API_KEY: process.env.OPENROUTER_AI_API_KEY ?? "",
+      OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY ?? "",
     },
   },
 });

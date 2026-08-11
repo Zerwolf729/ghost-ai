@@ -1,12 +1,9 @@
 import { schemaTask, metadata, logger } from "@trigger.dev/sdk";
-import { generateText } from "ai";
 import { z } from "zod";
 import { put } from "@vercel/blob";
 import { liveblocks } from "@/lib/liveblocks";
 import { prisma } from "@/lib/prisma";
-import { openRouter } from "@/lib/ai";
-
-const model = openRouter("cohere/north-mini-code:free");
+import { generateWithFallback } from "@/lib/ai-helper";
 
 // ── Schemas ──────────────────────────────────────────────────────────────
 
@@ -79,8 +76,6 @@ function compactCanvas(
     const node = n as Record<string, unknown>;
     const data = node.data;
     const label = extractNodeLabel(data);
-    // Use the first 8 chars of the node id as a stable short name,
-    // or fall back to the label.
     const rawId = typeof node.id === "string" ? node.id : "";
     const name = (rawId.length >= 8 ? rawId.slice(0, 8) : label) || `node-${compacted.length}`;
     compacted.push({
@@ -106,7 +101,7 @@ function compactEdges(
     const edge = e as Record<string, unknown>;
     if (typeof edge.source !== "string" || typeof edge.target !== "string") continue;
     const key = `${edge.source}->${edge.target}`;
-    if (seen.has(key)) continue; // dedupe parallel edges — one label per connector
+    if (seen.has(key)) continue;
     seen.add(key);
     const data = edge.data;
     const label =
@@ -146,14 +141,15 @@ function compactChat(
 export const generateSpec = schemaTask({
   id: "generate-spec",
   schema: generateSpecSchema,
+  // Bounded: AI-helper handles primary→fallback internally.
+  retry: {
+    maxAttempts: 1,
+  },
   run: async (payload, { ctx }) => {
     const { projectId, roomId, chatHistory, nodes, edges } = payload;
 
     metadata.set("projectId", projectId).set("roomId", roomId).set("status", "running");
 
-    // Structured payload-shape logging — types/counts only, never content.
-    // This is what surfaced `compactChat.map is not a function`: a payload
-    // whose chatHistory arrived as a non-array after transport.
     logger.info("spec:start", {
       projectId,
       roomId,
@@ -167,7 +163,6 @@ export const generateSpec = schemaTask({
     });
 
     try {
-      // Notify room that spec generation started
       await liveblocks.broadcastEvent(roomId, {
         type: "AI_STATUS",
         status: "processing",
@@ -179,7 +174,6 @@ export const generateSpec = schemaTask({
       const compactEdgesData = compactEdges(edges);
       const compactChatData = compactChat(chatHistory);
 
-      // Build compact prompt
       const nodesStr = compactNodes
         .map((n) => `- ${n.name}: ${n.label}${n.shape ? ` [${n.shape}]` : ""}`)
         .join("\n");
@@ -215,23 +209,17 @@ Keep each section concrete and grounded in the provided components and connectio
 
       logger.info("spec:ai-start", { projectId, promptChars: prompt.length });
 
-      const { text } = await generateText({
-        model,
-        prompt,
-        temperature: 0.7,
-      });
+      // Primary → fallback failover with bounded timeout.
+      const { text, model } = await generateWithFallback(prompt, { temperature: 0.7 });
 
       if (!text || !text.trim()) {
-        // Empty model output is a controlled failure, not a silent success.
         throw new Error("AI returned an empty specification");
       }
 
-      logger.info("spec:ai-complete", { projectId, specLength: text.length });
+      logger.info("spec:ai-complete", { projectId, specLength: text.length, model });
       metadata.set("specLength", text.length);
 
       // Persist spec to Vercel Blob.
-      // Key is derived from the RUN id (stable across retry attempts) so a
-      // retried attempt overwrites its own object instead of leaving orphans.
       const blobKey = `specs/${projectId}/${ctx.run.id}.md`;
       logger.info("spec:blob-start", { projectId, blobKey });
 
@@ -243,9 +231,7 @@ Keep each section concrete and grounded in the provided components and connectio
 
       logger.info("spec:blob-complete", { projectId, blobUrl: blob.url });
 
-      // Idempotent persistence: a retry of the same run must not create a
-      // second ProjectSpec row. filePath is deterministic per run, so an
-      // existing row for this URL means this step already succeeded.
+      // Idempotent persistence: retry of same run must not create duplicate.
       logger.info("spec:db-start", { projectId });
       const existing = await prisma.projectSpec.findFirst({
         where: { projectId, filePath: blob.url },
@@ -260,7 +246,6 @@ Keep each section concrete and grounded in the provided components and connectio
 
       metadata.set("status", "completed");
 
-      // Definitive completion signal — emitted ONLY after persistence succeeds.
       await liveblocks.broadcastEvent(roomId, {
         type: "AI_STATUS",
         status: "completed",
