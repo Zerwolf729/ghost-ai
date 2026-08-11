@@ -7,6 +7,7 @@ interface UseKeyboardShortcutsProps {
   zoomOut: (options?: { duration?: number }) => void;
   undo: () => void;
   redo: () => void;
+  onDelete: () => void;
 }
 
 export function useKeyboardShortcuts({
@@ -14,6 +15,7 @@ export function useKeyboardShortcuts({
   zoomOut,
   undo,
   redo,
+  onDelete,
 }: UseKeyboardShortcutsProps) {
   const lastActiveElementRef = useRef<Element | null>(null);
 
@@ -30,6 +32,12 @@ export function useKeyboardShortcuts({
 
       if (isEditable) {
         return; // Let the browser handle typing in editable fields
+      }
+
+      // Handle delete shortcuts — only when something is selected
+      if (event.key === 'Delete' || event.key === 'Backspace') {
+        event.preventDefault();
+        onDelete();
       }
 
       // Handle zoom shortcuts
@@ -62,7 +70,7 @@ export function useKeyboardShortcuts({
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [zoomIn, zoomOut, undo, redo]);
+  }, [zoomIn, zoomOut, undo, redo, onDelete]);
 
   return {};
 }

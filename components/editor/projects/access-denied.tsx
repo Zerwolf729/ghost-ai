@@ -20,7 +20,7 @@ export function AccessDenied() {
         <div className="space-y-2">
           <h1 className="text-xl font-semibold text-text-primary">Access Denied</h1>
           <p className="text-text-secondary">
-            You don't have permission to access this project.
+            You don&apos;t have permission to access this project.
           </p>
         </div>
         <Link

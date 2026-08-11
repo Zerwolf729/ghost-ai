@@ -129,8 +129,10 @@ interface DragState {
 
 export function ShapePanel({
   onDragStart,
+  sidebarOpen = false,
 }: {
   onDragStart?: (shape: Shape, clientX: number, clientY: number) => void;
+  sidebarOpen?: boolean;
 }) {
   const [drag, setDrag] = useState<DragState | null>(null);
 
@@ -179,8 +181,8 @@ export function ShapePanel({
         </div>
       )}
 
-      <div className="pointer-events-none absolute inset-x-0 bottom-20 flex justify-center">
-        <div className="pointer-events-auto flex items-center gap-1 rounded-full border border-border-default bg-bg-surface/95 px-3 py-2 shadow-xl backdrop-blur-xl">
+      <div className="pointer-events-none absolute right-90 bottom-20 flex justify-center transition-all duration-300">
+  <div className="pointer-events-auto flex items-center gap-1 rounded-full border border-border-default bg-bg-surface/95 px-3 py-2 shadow-xl backdrop-blur-xl">
           {NODE_SHAPES.map((shape) => {
             const Icon = SHAPE_ICONS[shape];
             return (

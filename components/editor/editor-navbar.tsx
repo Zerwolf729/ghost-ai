@@ -13,6 +13,7 @@ import {
 import { UserButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { CollaboratorAvatars } from "./canvas/collaborator-avatars";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
@@ -146,6 +147,7 @@ export const EditorNavbar: React.FC<EditorNavbarProps> = ({
           </Button>
         )}
 
+
         {/* AI sidebar toggle */}
         <button
           type="button"
@@ -158,6 +160,12 @@ export const EditorNavbar: React.FC<EditorNavbarProps> = ({
         >
           <MessageSquare className="h-5 w-5 text-text-secondary" />
         </button>
+
+        {isWorkspace && (
+          <div className="ml-2 flex items-center">
+            <CollaboratorAvatars />
+          </div>
+        )}
 
         {/* User menu - conditionally shown based on workspace context */}
         {!isWorkspace && <UserButton />}

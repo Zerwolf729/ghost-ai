@@ -8,7 +8,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Goal
 
-- Implementation completed for Clerk auth migration (catch‑all routes, proxy, build passes).
+- Implementation completed for AI spec generation backend flow (Spec 27): trigger route, token route, and `generate-spec` Trigger.dev task.
 
 ## Completed
 
@@ -174,11 +174,153 @@ Update this file whenever the current phase, active feature, or implementation s
   - ✅ Uses existing project color tokens (`bg-surface`, `text-primary`, etc.)
   - ✅ `npm run build` passes (verified via tsc --noEmit)
 
-## In Progress
+## Completed
 
-- **AI Generation Integration (2026-07-??):**
-  - 🔄 TODO: Add AI generation service for creating templates from prompts
-  - 🔄 TODO: Integrate AI generation into prompt input
+- **Implemented AI design trigger backend (2026-07-21):**
+  - ✅ Added `TaskRun` model to `prisma/models/project.prisma`
+  - ✅ Ran migration/generation
+  - ✅ Created `src/trigger/design-agent.ts` task
+  - ✅ Created `app/api/ai/design/route.ts` trigger route
+  - ✅ Created `app/api/ai/design/token/route.ts` token route
+  - ✅ Verified build passes with API and trigger integration
+
+## Completed
+
+- **Implemented Shape Panel (Spec 12, 2026-07-22):**
+  - ✅ Draggable shape icons (rectangle, diamond, circle, pill, cylinder, hexagon, triangle, database)
+  - ✅ Floating pill-shaped toolbar at bottom-center
+  - ✅ Drag payload with shape name and default size
+  - ✅ Canvas `dragover` and `drop` handling
+  - ✅ Screen-to-flow coordinate conversion on drop
+  - ✅ New node creation with UUID for collision resistance
+  - ✅ Custom canvas node type (`canvasNode`) with `CanvasNodeRenderer`
+  - ✅ Drag ghost preview following cursor
+  - ✅ `npm run build` passes (tsc --noEmit exit 0)
+
+- **Implemented Node Shape Rendering (Spec 13, 2026-07-22):**
+  - ✅ CSS shapes: rectangle (rounded), pill (pill-shaped), circle (circular)
+  - ✅ SVG shapes: diamond, hexagon, cylinder, triangle, database
+  - ✅ SVG shapes scale with node size
+  - ✅ Subtle borders at rest (`rgba(255,255,255,0.1)`), brighter when selected (`rgba(255,255,255,0.35)`)
+  - ✅ Drag ghost preview matches shape type
+  - ✅ Connected to collaborative state via Liveblocks storage
+
+- **Implemented Node Editing (Spec 14, 2026-07-22):**
+  - ✅ `NodeResizer` with resize handles on selected nodes
+  - ✅ Minimum size constraints (`MIN_WIDTH=60`, `MIN_HEIGHT=40`)
+  - ✅ Subtle white resize handles consistent with dark UI
+  - ✅ Inline label editing via contentEditable div
+  - ✅ Double-click node center to start editing
+  - ✅ Placeholder text ("Label") when empty
+  - ✅ Blur or Escape closes editing
+  - ✅ `nodrag nopan` prevents canvas drag/pan during editing
+  - ✅ Updates flow through Liveblocks mutations
+
+- **Implemented Color Toolbar (Spec 15, 2026-07-22):**
+  - ✅ `NodeToolbar` above selected nodes with 8 predefined color pairs
+  - ✅ Each swatch shows node fill color
+  - ✅ Hover glow effect per color pair
+  - ✅ Fill swatches update both background and text color
+  - ✅ Separate text color swatches
+  - ✅ Active swatch clearly indicated
+  - ✅ `nodrag nopan` prevents canvas interference
+  - ✅ Collaborative state updates via Liveblocks
+
+- **Implemented Edge Behavior (Spec 16, 2026-07-22):**
+  - ✅ 4-sided connection handles (top/right/bottom/left)
+  - ✅ Small white handles with dark border
+  - ✅ Hidden by default, visible on node hover/selection
+  - ✅ `ConnectionMode.Loose` for flexible connections
+  - ✅ `defaultEdgeOptions` uses custom `canvasEdge` type with arrowhead
+  - ✅ `CustomCanvasEdge` with smooth-step routing
+  - ✅ Dimmed stroke at rest, brightens on hover/selection
+  - ✅ 20px invisible hit area for easy clicking
+  - ✅ `EdgeLabelRenderer` with `getSmoothStepPath` midpoint for label positioning
+  - ✅ Inline label editing via double-click
+  - ✅ Input grows with text width
+  - ✅ Blur/Enter/Escape saves label
+  - ✅ Saved labels as pill badges; hint text when empty
+
+- **Implemented Canvas Ergonomics (Spec 17, 2026-07-22):**
+  - ✅ Pill-shaped control bar at bottom-left
+  - ✅ Zoom controls: zoom out, fit view, zoom in (with 200ms animation)
+  - ✅ History controls: undo/redo (disabled when nothing to undo/redo)
+  - ✅ `useKeyboardShortcuts` hook in `hooks/`
+  - ✅ `+`/`=` for zoom in, `-` for zoom out
+  - ✅ `Cmd/Ctrl+Z` for undo, `Cmd/Ctrl+Shift+Z`/`Cmd/Ctrl+Y` for redo
+  - ✅ Ignores shortcuts when typing in input/textarea/contentEditable
+  - ✅ Minimap removed as per spec
+
+- **Implemented Starter Templates (Spec 18, 2026-07-22):**
+  - ✅ 3 templates: Microservices, CI/CD Pipeline, Event-Driven System
+  - ✅ `CanvasTemplate` type with nodes and edges
+  - ✅ Helper functions for readable template definitions
+  - ✅ Uses shared canvas types and color palette
+  - ✅ Modal with card grid, template name and description
+  - ✅ SVG diagram preview per template card (scaled, colored nodes/edges)
+  - ✅ Import button per template
+  - ✅ Import clears existing canvas, adds template nodes/edges
+  - ✅ fitView after loading
+  - ✅ Connected via collaborative Liveblocks state
+
+## Completed
+
+- **Implemented real-time AI design agent frontend flow (26-design-agent-frontend.md):**
+  - ✅ Created `hooks/use-realtime-run.ts` wrapping `@trigger.dev/react-hooks`
+  - ✅ AI sidebar calls `POST /api/ai/design`, fetches public token, subscribes via `useRealtimeRun`
+  - ✅ Input disabled while run active, send button shows spinner
+  - ✅ Compact status strip shown only during active runs
+  - ✅ AI status header reflects combined `AIStatus` room state + local run state
+  - ✅ Run state resets on completion/failure
+  - ✅ Passing `roomId` from `EditorWorkspaceClient` → `AISidebar`
+  - ✅ `npx tsc --noEmit` passes clean
+
+## Completed
+
+- **Implemented AI presence state (2026-07-22):**
+  - ✅ Created `components/editor/ai/ai-status-context.tsx` — `AIStatusProvider` + `useAIStatus` hook sharing status across workspace
+  - ✅ Created `components/editor/ai/ai-activity-listener.tsx` — renders inside RoomProvider, subscribes to `AI_STATUS` broadcast events, syncs to shared context
+  - ✅ Updated `editor-workspace-client.tsx` — wrapped layout with `AIStatusProvider`
+  - ✅ Updated `canvas-editor.tsx` — placed `AIActivityListener` inside room context
+  - ✅ Updated `ai-sidebar.tsx` — reads status from context, shows spinner in header + disabled input/send button during `started`, restores when terminal
+  - ✅ Normalized trigger status values to match schema (`thinking`→`started`, `complete`→`completed`, `error`→`failed`)
+  - ✅ Verified `types/tasks.ts` schema already validated payloads correctly
+  - ✅ Verified `presence-cursors.tsx` already renders `isThinking` ping spinner on cursor badge
+  - ✅ `npx tsc --noEmit` passes, `npx eslint` on new files passes clean
+
+## Completed
+
+- **Implemented Sidebar Chat Feed (2026-07-27):**
+  - ✅ Added `ChatMessage` type + `validateChatMessage` in `types/tasks.ts`
+  - ✅ Wired `ai-chat` broadcast/listen via `AI_CHAT` events in `ai-sidebar.tsx`
+  - ✅ Users can send messages through existing sidebar input
+  - ✅ Starter chips broadcast chat messages to room
+  - ✅ Messages validated before rendering
+  - ✅ Error state shown if send fails
+  - ✅ Chat feed separate from `ai-status-feed` (different event type)
+  
+## Completed
+
+- **Implemented AI spec generation backend (Spec 27, 2026-08-03):**
+  - ✅ Created `src/trigger/generate-spec.ts` (Zod, OpenRouter, Markdown output, metadata/status tracking)
+  - ✅ Created `app/api/ai/spec/route.ts` (trigger endpoint, Zod validation, TaskRun persistence, project access enforcement from roomId)
+  - ✅ Created `app/api/ai/spec/token/route.ts` (token endpoint, TaskRun ownership verification, 1h expiry)
+  - ✅ Refactored `design-agent.ts` and `generate-spec.ts` to use shared OpenRouter client (`lib/ai.ts`)
+  - ✅ `npx tsc --noEmit` and `eslint` pass
+
+- **Implemented Spec Persistence & Download (Spec 28, 2026-08-03):**
+  - ✅ Added `ProjectSpec` Prisma model (id, projectId, filePath, createdAt) + migration + client regen
+  - ✅ `generate-spec.ts` now uploads Markdown to Vercel Blob + saves `ProjectSpec` record
+  - ✅ `GET /api/projects/[projectId]/specs/[specId]/download` — auth, project/spec access verification, streams Markdown attachment
+  - ✅ `npx tsc --noEmit` and `eslint` pass
+
+- **Implemented Spec UI Integration (Spec 29, 2026-08-03):**
+  - ✅ Added `GET /api/projects/[projectId]/specs` metadata list route (auth + project access)
+  - ✅ Specs tab shows real spec list (createdAt) fetched from backend, compact scrollable list
+  - ✅ Click item opens preview modal — fetches content via download endpoint, renders as Markdown, Escape/overlay closes
+  - ✅ Download button per item via `[specId]/download` endpoint (browser handles file)
+  - ✅ `AISidebar` accepts `projectId`; `editor-workspace-client` passes it
+  - ✅ `npx tsc --noEmit` passes
 
 ## Next Up
 

@@ -29,7 +29,16 @@ export default function RootLayout({
     <ClerkProvider
         signInUrl="/sign-in"
         signUpUrl="/sign-up"
-        appearance={{ theme: dark }}>
+        appearance={{
+          theme: dark,
+          variables: {
+            colorPrimary: "var(--color-accent-primary)",
+            colorBackground: "var(--color-bg-base)",
+            colorForeground: "var(--color-text-primary)",
+            colorMutedForeground: "var(--color-text-secondary)",
+            colorInput: "var(--color-bg-elevated)",
+          },
+        }}>
       <html
         lang="en"
         className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}

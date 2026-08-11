@@ -42,7 +42,12 @@ export async function GET(
     const client = await clerkClient();
     const ownerUser = await client.users.getUser(project.ownerId);
 
-    const ownerName = [ownerUser.firstName, ownerUser.lastName].filter(Boolean).join(" ") || "Unknown";
+    const ownerName =
+      ownerUser.fullName ||
+      ownerUser.username ||
+      [ownerUser.firstName, ownerUser.lastName].filter(Boolean).join(" ") ||
+      ownerUser.emailAddresses?.[0]?.emailAddress?.split('@')[0] ||
+      "Unknown";
     const ownerEmail = ownerUser.emailAddresses?.[0]?.emailAddress || "Unknown";
 
     const collaboratorEmails = await prisma.projectCollaborator.findMany({
@@ -69,14 +74,44 @@ export async function GET(
     }
 
     // Enrich collaborator emails with Clerk user data
-    // Note: Clerk user lookup requires @clerk/clerk-sdk-node for backend
-    // For now, return emails only - frontend can display name or email
-    const enrichedCollaborators = collaboratorEmails.map((c) => ({
-      email: c.email,
-      joinedAt: c.createdAt,
-      name: c.email, // Will be enriched client-side if Clerk user found
-      avatarUrl: null,
-    }));
+    const enrichedCollaborators = await Promise.all(
+      collaboratorEmails.map(async (c) => {
+        try {
+          const users = await client.users.getUserList({
+            emailAddress: [c.email],
+            limit: 1,
+          });
+          const clerkUser = users.data[0];
+          if (!clerkUser) {
+            return {
+              email: c.email,
+              joinedAt: c.createdAt,
+              name: c.email,
+              avatarUrl: null,
+            };
+          }
+          const name =
+            clerkUser.fullName ||
+            clerkUser.username ||
+            [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ") ||
+            c.email.split('@')[0] ||
+            c.email;
+          return {
+            email: c.email,
+            joinedAt: c.createdAt,
+            name,
+            avatarUrl: clerkUser.imageUrl || null,
+          };
+        } catch {
+          return {
+            email: c.email,
+            joinedAt: c.createdAt,
+            name: c.email,
+            avatarUrl: null,
+          };
+        }
+      })
+    );
 
     return NextResponse.json({
       collaborators: enrichedCollaborators,

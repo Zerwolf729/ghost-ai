@@ -1,11 +1,11 @@
 "use client";
 
 import { LiveMap, LiveObject } from "@liveblocks/client";
-import { LiveblocksProvider, RoomProvider, ClientSideSuspense } from "@liveblocks/react/suspense";
+import { LiveblocksProvider, RoomProvider } from "@liveblocks/react/suspense";
 import { ErrorBoundary } from "react-error-boundary";
 import { ReactNode } from "react";
 
-export function LiveblocksCanvasWrapper({
+export function LiveblocksRoomWrapper({
   roomId,
   children,
 }: {
@@ -14,10 +14,10 @@ export function LiveblocksCanvasWrapper({
 }) {
   return (
     <ErrorBoundary fallback={<div>Error connecting to canvas</div>}>
-      <LiveblocksProvider authEndpoint="/api/liveblocks-auth">
+      <LiveblocksProvider authEndpoint="/api/liveblocks-auth" throttle={16}>
         <RoomProvider
           id={roomId}
-          initialPresence={{ cursor: null, isThinking: false }}
+          initialPresence={{ cursor: null, thinking: false }}
           initialStorage={{
             flow: new LiveObject({
               nodes: new LiveMap(),
@@ -25,9 +25,7 @@ export function LiveblocksCanvasWrapper({
             }),
           }}
         >
-          <ClientSideSuspense fallback={<div>Loading canvas...</div>}>
-            {children}
-          </ClientSideSuspense>
+          {children}
         </RoomProvider>
       </LiveblocksProvider>
     </ErrorBoundary>

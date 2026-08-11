@@ -1,6 +1,4 @@
-"use client";
-
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import { Handle, Position, NodeResizer, NodeToolbar } from "@xyflow/react";
 import type { NodeProps } from "@xyflow/react";
 import { useMutation } from "@liveblocks/react";
@@ -178,10 +176,26 @@ function TextSwatch({
 // --- Main component ---
 
 type LiveNodeData = LiveObject<{
-  data: LiveObject<{ label: string; fill?: string; text?: string; shape?: Shape }>;
+  data: LiveObject<{
+    label: string;
+    fill?: string;
+    text?: string;
+    shape?: string;
+  }>;
 }>;
 
-export default function CanvasNodeRenderer(props: any) {
+type CanvasNodeRendererProps = NodeProps & {
+  data: {
+    label?: string;
+    fill?: string;
+    text?: string;
+    shape?: Shape;
+    [key: string]: unknown;
+  };
+  selected?: boolean;
+};
+
+export default function CanvasNodeRenderer(props: CanvasNodeRendererProps) {
   const { id, data, selected } = props;
   const fill = data.fill ?? DEFAULT_FILL;
   const textColor = data.text ?? DEFAULT_TEXT;
@@ -203,7 +217,7 @@ export default function CanvasNodeRenderer(props: any) {
       if (!node) return;
       node.get("data").set("label", newLabel);
     },
-    [id]
+    [id],
   );
 
   // Update fill color in Liveblocks storage
@@ -216,7 +230,7 @@ export default function CanvasNodeRenderer(props: any) {
       liveData.set("fill", fillBg);
       liveData.set("text", fillText);
     },
-    [id]
+    [id],
   );
 
   // Update text color in Liveblocks storage
@@ -227,7 +241,7 @@ export default function CanvasNodeRenderer(props: any) {
       if (!node) return;
       node.get("data").set("text", textColor);
     },
-    [id]
+    [id],
   );
 
   const startEditing = useCallback((e: React.MouseEvent) => {
@@ -248,7 +262,7 @@ export default function CanvasNodeRenderer(props: any) {
         commitEdit();
       }
     },
-    [commitEdit]
+    [commitEdit],
   );
 
   // Auto-focus contentEditable when editing starts
