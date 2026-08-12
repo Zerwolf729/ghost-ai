@@ -7,13 +7,20 @@ import { createOpenAI } from "@ai-sdk/openai";
 let _openRouter: ReturnType<typeof createOpenAI> | null = null;
 
 export function getOpenRouter() {
-  // DEBUG: Verify runtime env var
-  console.log("DEBUG: OPENROUTER_API_KEY presence in runtime:", !!process.env.OPENROUTER_API_KEY, "length:", process.env.OPENROUTER_API_KEY?.length);
+  const apiKey = process.env.OPENROUTER_API_KEY;
+
+  if (!apiKey) {
+    // Fail fast with clear message. Prevents confusing OpenAI fallback error.
+    throw new Error(
+      "OPENROUTER_API_KEY is missing in the runtime environment. " +
+        "Set it in the Trigger.dev dashboard under Environment Variables."
+    );
+  }
 
   if (!_openRouter) {
     _openRouter = createOpenAI({
       baseURL: "https://openrouter.ai/api/v1",
-      apiKey: process.env.OPENROUTER_API_KEY,
+      apiKey,
     });
   }
   return _openRouter;
