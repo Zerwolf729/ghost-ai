@@ -10,11 +10,22 @@ export const PRIMARY_MODEL_ID = "cohere/north-mini-code:free";
 const FALLBACK_MODEL_ID = "inclusionai/ling-3.0-tiny:free";
 
 /** Per-model attempt timeout — fail fast, fall back, never hang. */
-const AI_TIMEOUT_MS = 60_000;
+const AI_TIMEOUT_MS = 150_000;
+
+function logAiError(model: string, stage: 'primary' | 'fallback', err: unknown, startTime: number) {
+  const duration = Date.now() - startTime;
+  console.error(`[AI] ${stage}:failure model=${model} durationMs=${duration}`, {
+    errorName: err instanceof Error ? err.name : 'UnknownError',
+    errorMessage: err instanceof Error ? err.message : String(err),
+    isAbort: err instanceof Error && err.name === 'AbortError',
+  });
+}
 
 /** Classify user-facing error without leaking stack/API internals. */
 export function friendlyError(err: unknown): string {
   if (err instanceof Error) {
+    if (err.name === 'AbortError') return "AI request timed out. Please try again.";
+
     const m = err.message.toLowerCase();
     if (m.includes("fetch failed") || m.includes("network") || m.includes("econnrefused") || m.includes("enotfound"))
       return "Connection to AI provider failed. Retrying automatically…";
@@ -44,6 +55,8 @@ export async function generateWithFallback(
   const primaryModel = openRouter(PRIMARY_MODEL_ID);
   const fallbackModel = openRouter(FALLBACK_MODEL_ID);
 
+  const startTime = Date.now();
+
   // Primary attempt
   const primaryController = new AbortController();
   const primaryTimer = setTimeout(() => primaryController.abort(), AI_TIMEOUT_MS);
@@ -55,10 +68,13 @@ export async function generateWithFallback(
       abortSignal: primaryController.signal,
     });
     if (!text || !text.trim()) throw new Error("Primary model returned empty output");
+    console.log(`[AI] primary:success model=${PRIMARY_MODEL_ID} durationMs=${Date.now() - startTime}`);
     return { text, model: PRIMARY_MODEL_ID };
   } catch (err) {
-    console.warn("Primary AI model failed, trying fallback:", err);
+    logAiError(PRIMARY_MODEL_ID, 'primary', err, startTime);
+
     // Fallback attempt
+    const fallbackStartTime = Date.now();
     const fallbackController = new AbortController();
     const fallbackTimer = setTimeout(() => fallbackController.abort(), AI_TIMEOUT_MS);
     try {
@@ -69,9 +85,10 @@ export async function generateWithFallback(
         abortSignal: fallbackController.signal,
       });
       if (!text || !text.trim()) throw new Error("Fallback model returned empty output");
+      console.log(`[AI] fallback:success model=${FALLBACK_MODEL_ID} durationMs=${Date.now() - fallbackStartTime}`);
       return { text, model: FALLBACK_MODEL_ID };
     } catch (fallbackErr) {
-      console.error("Both AI models failed:", fallbackErr);
+      logAiError(FALLBACK_MODEL_ID, 'fallback', fallbackErr, fallbackStartTime);
       throw new Error(friendlyError(fallbackErr));
     } finally {
       clearTimeout(fallbackTimer);
