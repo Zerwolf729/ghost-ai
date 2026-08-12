@@ -7,6 +7,9 @@ import { createOpenAI } from "@ai-sdk/openai";
 let _openRouter: ReturnType<typeof createOpenAI> | null = null;
 
 export function getOpenRouter() {
+  // DEBUG: Verify runtime env var
+  console.log("DEBUG: OPENROUTER_API_KEY presence in runtime:", !!process.env.OPENROUTER_API_KEY, "length:", process.env.OPENROUTER_API_KEY?.length);
+
   if (!_openRouter) {
     _openRouter = createOpenAI({
       baseURL: "https://openrouter.ai/api/v1",
