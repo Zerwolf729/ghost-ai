@@ -14,10 +14,25 @@ const AI_TIMEOUT_MS = 150_000;
 
 function logAiError(model: string, stage: 'primary' | 'fallback', err: unknown, startTime: number) {
   const duration = Date.now() - startTime;
+  const isError = err instanceof Error;
+
+  // Safely extract properties without casting to any
+  const errorObj = isError ? err : {} as Record<string, unknown>;
+  const getProp = (key: string): unknown => {
+    try {
+      const val = (errorObj as Record<string, unknown>)[key];
+      if (val !== undefined && val !== null && val !== '') return val;
+    } catch { void 0; }
+    return null;
+  };
+
   console.error(`[AI] ${stage}:failure model=${model} durationMs=${duration}`, {
-    errorName: err instanceof Error ? err.name : 'UnknownError',
-    errorMessage: err instanceof Error ? err.message : String(err),
-    isAbort: err instanceof Error && err.name === 'AbortError',
+    errorName: isError ? err.name : 'UnknownError',
+    errorMessage: isError ? err.message : String(err),
+    isAbort: isError && err.name === 'AbortError',
+    statusCode: getProp('responseStatus') ?? getProp('statusCode') ?? null,
+    provider: getProp('provider') ?? null,
+    reason: getProp('cause') !== null ? String(getProp('cause')) : null,
   });
 }
 
