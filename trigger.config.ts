@@ -27,6 +27,7 @@ export default defineConfig({
       LIVEBLOCKS_SECRET_KEY: process.env.LIVEBLOCKS_SECRET_KEY ?? "",
       LIVEBLOCKS_PUBLIC_KEY: process.env.LIVEBLOCKS_PUBLIC_KEY ?? "",
       OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY ?? "",
+      BLOB_READ_WRITE_TOKEN: process.env.BLOB_READ_WRITE_TOKEN ?? "",
     },
   },
 });
