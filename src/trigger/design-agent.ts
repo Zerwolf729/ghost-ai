@@ -1,7 +1,7 @@
 import { task } from "@trigger.dev/sdk";
 import { z } from "zod";
 import { liveblocks } from "@/lib/liveblocks";
-import { generateWithFallback } from "@/lib/ai-helper";
+import { generateWithFallback, PRIMARY_MODEL_ID } from "@/lib/ai-helper";
 import { SHAPE_DEFAULTS, NODE_COLORS, NODE_SHAPES } from "@/types/canvas";
 
 const COLOR_PALETTE = NODE_COLORS.map((c) => c.fill);
@@ -54,6 +54,20 @@ export const designAgent = task({
   },
   run: async (payload: { prompt: string; roomId: string; userId: string }) => {
     const { prompt, roomId } = payload;
+
+    // Runtime diagnostic — proves which code is executing and that the
+    // OpenRouter-compatible provider (NOT @ai-sdk/openai) is in use.
+    // Never logs the API key itself.
+    console.log("[AI CONFIG]", {
+      provider: "openrouter",
+      baseURL: "https://openrouter.ai/api/v1",
+      implementation: "createOpenAICompatible",
+      package: "@ai-sdk/openai-compatible",
+      model: PRIMARY_MODEL_ID,
+      hasOpenRouterApiKey: Boolean(process.env.OPENROUTER_API_KEY?.trim()),
+      apiKeyLength: process.env.OPENROUTER_API_KEY?.length ?? 0,
+      deployment: process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA ?? process.env.VERCEL_GIT_COMMIT_SHA ?? "unknown",
+    });
 
     await liveblocks.broadcastEvent(roomId, {
       type: "AI_STATUS",

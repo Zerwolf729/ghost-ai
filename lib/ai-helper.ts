@@ -6,7 +6,7 @@ import { getOpenRouter } from "@/lib/ai";
  * Primary: cohere/north-mini-code:free
  * Fallback: inclusionai/ling-3.0-tiny:free
  */
-const PRIMARY_MODEL_ID = "cohere/north-mini-code:free";
+export const PRIMARY_MODEL_ID = "cohere/north-mini-code:free";
 const FALLBACK_MODEL_ID = "inclusionai/ling-3.0-tiny:free";
 
 /** Per-model attempt timeout — fail fast, fall back, never hang. */
