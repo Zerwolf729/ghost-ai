@@ -1,13 +1,13 @@
 import { generateText } from "ai";
-import { openRouter } from "@/lib/ai";
+import { getOpenRouter } from "@/lib/ai";
 
 /**
  * Canonical OpenRouter model IDs — DO NOT CHANGE.
  * Primary: cohere/north-mini-code:free
  * Fallback: inclusionai/ling-3.0-tiny:free
  */
-export const PRIMARY_MODEL = openRouter("cohere/north-mini-code:free");
-export const FALLBACK_MODEL = openRouter("inclusionai/ling-3.0-tiny:free");
+const PRIMARY_MODEL_ID = "cohere/north-mini-code:free";
+const FALLBACK_MODEL_ID = "inclusionai/ling-3.0-tiny:free";
 
 /** Per-model attempt timeout — fail fast, fall back, never hang. */
 const AI_TIMEOUT_MS = 60_000;
@@ -40,19 +40,22 @@ export async function generateWithFallback(
   options: { temperature?: number } = {}
 ): Promise<{ text: string; model: string }> {
   const temperature = options.temperature ?? 0.7;
+  const openRouter = getOpenRouter();
+  const primaryModel = openRouter(PRIMARY_MODEL_ID);
+  const fallbackModel = openRouter(FALLBACK_MODEL_ID);
 
   // Primary attempt
   const primaryController = new AbortController();
   const primaryTimer = setTimeout(() => primaryController.abort(), AI_TIMEOUT_MS);
   try {
     const { text } = await generateText({
-      model: PRIMARY_MODEL,
+      model: primaryModel,
       prompt,
       temperature,
       abortSignal: primaryController.signal,
     });
     if (!text || !text.trim()) throw new Error("Primary model returned empty output");
-    return { text, model: "cohere/north-mini-code:free" };
+    return { text, model: PRIMARY_MODEL_ID };
   } catch (err) {
     console.warn("Primary AI model failed, trying fallback:", err);
     // Fallback attempt
@@ -60,13 +63,13 @@ export async function generateWithFallback(
     const fallbackTimer = setTimeout(() => fallbackController.abort(), AI_TIMEOUT_MS);
     try {
       const { text } = await generateText({
-        model: FALLBACK_MODEL,
+        model: fallbackModel,
         prompt,
         temperature,
         abortSignal: fallbackController.signal,
       });
       if (!text || !text.trim()) throw new Error("Fallback model returned empty output");
-      return { text, model: "inclusionai/ling-3.0-tiny:free" };
+      return { text, model: FALLBACK_MODEL_ID };
     } catch (fallbackErr) {
       console.error("Both AI models failed:", fallbackErr);
       throw new Error(friendlyError(fallbackErr));
