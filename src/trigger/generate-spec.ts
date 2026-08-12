@@ -5,6 +5,18 @@ import { liveblocks } from "@/lib/liveblocks";
 import { prisma } from "@/lib/prisma";
 import { generateWithFallback } from "@/lib/ai-helper";
 
+// ── Blob Auth ─────────────────────────────────────────────────────────────
+
+function requireBlobToken(): string {
+  const token = process.env.BLOB_READ_WRITE_TOKEN?.trim();
+  if (!token) {
+    throw new Error(
+      "BLOB_READ_WRITE_TOKEN is missing in the Trigger.dev production environment."
+    );
+  }
+  return token;
+}
+
 // ── Schemas ──────────────────────────────────────────────────────────────
 
 const canvasNodeSchema = z.object({
@@ -163,6 +175,7 @@ export const generateSpec = schemaTask({
     });
 
     try {
+      const blobToken = requireBlobToken();
       await liveblocks.broadcastEvent(roomId, {
         type: "AI_STATUS",
         status: "processing",
@@ -221,13 +234,24 @@ Keep each section concrete and grounded in the provided components and connectio
 
       // Persist spec to Vercel Blob.
       const blobKey = `specs/${projectId}/${ctx.run.id}.md`;
-      logger.info("spec:blob-start", { projectId, blobKey });
+      logger.info("spec:blob-start", { projectId, blobKey, hasBlobToken: !!blobToken });
 
-      const blob = await put(blobKey, text, {
-        access: "private",
-        contentType: "text/markdown",
-        allowOverwrite: true,
-      });
+      let blob;
+      try {
+        blob = await put(blobKey, text, {
+          access: "private",
+          token: blobToken,
+          contentType: "text/markdown",
+          allowOverwrite: true,
+        });
+      } catch (error) {
+        logger.error("spec:blob-failed", {
+          projectId,
+          blobKey,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        throw new Error("Failed to store generated specification in Vercel Blob.");
+      }
 
       logger.info("spec:blob-complete", { projectId, blobUrl: blob.url });
 
